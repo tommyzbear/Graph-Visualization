@@ -24,16 +24,19 @@ std::vector<std::vector<int>> build_graph_unweighted(int n, int m, int *I, int *
 std::vector<std::vector<edge>> build_graph_weighted(int n, int m, int *I, int *J, double *V);
 
 int *randomPivots(int n, int nPivots, int *I, int *J);
-std::vector<int> misFitration(int n, int nPivots, int *I, int *J, double *V);
+std::vector<int> misFitration(int n, int m, int nPivots, int *I, int *J, double *V);
 std::vector<int> maxMinEuclidean(int n, int nPivots, int *I, int *J, double *V);
 std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, int m, int nPivots, int *I, int *J, double *V);
 std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int n, int nPivots, int *I, int *J, double *V);
 std::vector<int> kMeansLayout(int n, int nPivots, int *I, int *J, double *V);
 
 std::vector<double> euclideanDist(double *coordinates, int pivot);
-std::vector<double> dijkstra(int n, int source, int *I, int *J, double *V);
+std::vector<double> dijkstra(int n, int m, int source, int *I, int *J, double *V);
+std::vector<int> bfs(int n, int m, int source, int *I, int *J);
 
-std::vector<term> naivePartition(int n, int nPivots, std::vector<int> pivots, std::map<int, std::vector<int>> regions, int *I, int *J, double *V);
+std::vector<term> naivePartition(int n, int m, int nPivots, std::vector<int> pivots, std::map<int, std::vector<int>> regions, int *I, int *J, double *V);
+// std::vector<int> regionAssignment(int n, int nPivots, std::vector<int> pivots, int *I, int *J, double *V);
+std::vector<term> multiSourcePartition(int n, int m, int nPivots, std::vector<int> pivots, std::map<int, std::vector<int>> regions, std::vector<std::vector<int>> graph, int *I, int *J, double *V);
 std::map<std::tuple<int, int>, term> dijkstraFindTerms(int n, int m, int *I, int *J, double *V);
 
 struct edge
@@ -152,6 +155,34 @@ std::vector<double> dijkstra(int n, int m, int source, int *I, int *J, double *V
     return dist;
 }
 
+std::vector<int> bfs(int n, int m, int source, int *I, int *J)
+{
+    auto graph = build_graph_unweighted(n, m, I, J);
+
+    std::vector<int> d(n, -1); // distances from source
+    std::queue<int> q;
+
+    d[source] = 0;
+    q.push(source);
+
+    while (!q.empty())
+    {
+        int current = q.front();
+        q.pop();
+        for (int next : graph[current])
+        {
+            if (d[next] == -1)
+            {
+                q.push(next);
+                int d_ij = d[current] + 1;
+                d[next] = d_ij;
+            }
+        }
+    }
+
+    return d;
+}
+
 int *randomPivots(int n, int nPivots, int *I, int *J)
 {
     std::srand(time(0));
@@ -166,10 +197,8 @@ int *randomPivots(int n, int nPivots, int *I, int *J)
     return pivots;
 }
 
-std::vector<int> misFitration(int n, int nPivots, int *I, int *J, double *V)
+std::vector<int> misFitration(int n, int m, int nPivots, int *I, int *J, double *V)
 {
-    double shortestPathsUnweighted[n][n] = {};
-
     int layerIndex = 1;
 
     std::vector<int> previousPivot{};
@@ -189,7 +218,7 @@ std::vector<int> misFitration(int n, int nPivots, int *I, int *J, double *V)
         bool empty = false;
         while (!empty)
         {
-            double *pathLengths = shortestPathsUnweighted[pTemp];
+            std::vector<int> pathLengths = bfs(n, m, pTemp, I, J);
             pivots.push_back(pTemp);
             std::vector<int> remainingVerticesTemp;
             for (int i = 0; i < sizeof(remainingVertices); i++)
@@ -282,7 +311,7 @@ std::vector<double> euclideanDist(double *coordinates, int pivot)
     return dist;
 }
 
-std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, int nPivots, int *I, int *J, double *V)
+std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, int m, int nPivots, int *I, int *J, double *V)
 {
     std::srand(time(0));
 
@@ -290,7 +319,7 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, in
 
     std::vector<int> pivots = {p0};
 
-    std::vector<double> shortestPaths = dijkstra(n, p0, I, J, V);
+    std::vector<double> shortestPaths = dijkstra(n, m, p0, I, J, V);
 
     std::vector<std::tuple<double, int>> mins;
 
@@ -310,7 +339,7 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, in
             }
         }
 
-        shortestPaths = dijkstra(n, argMax, I, J, V);
+        shortestPaths = dijkstra(n, m, argMax, I, J, V);
 
         pivots.push_back(argMax);
 
@@ -340,7 +369,7 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, in
     return {pivots, regions};
 }
 
-std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int n, int nPivots, int *I, int *J, double *V)
+std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int n, int m, int nPivots, int *I, int *J, double *V)
 {
     std::srand(time(0));
     std::default_random_engine generator;
@@ -349,7 +378,7 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int
 
     std::vector<int> pivots = {p0};
 
-    std::vector<double> shortestPaths = dijkstra(n, p0, I, J, V);
+    std::vector<double> shortestPaths = dijkstra(n, m, p0, I, J, V);
 
     std::vector<std::tuple<double, int>> mins;
     for (int i = 0; i < n; i++)
@@ -379,7 +408,7 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int
             }
         }
 
-        shortestPaths = dijkstra(n, pivots[i], I, J, V);
+        shortestPaths = dijkstra(n, m, pivots[i], I, J, V);
 
         for (int j = 0; j < n; j++)
         {
@@ -415,6 +444,7 @@ std::vector<term> naivePartition(int n, int m, int nPivots, std::vector<int> piv
 {
     std::map<std::tuple<int, int>, term> constraints = dijkstraFindTerms(n, m, I, J, V);
     std::vector<term> terms = {};
+
     for (int p : pivots)
     {
         std::vector<double> shortestPath = dijkstra(n, m, p, I, J, V);
@@ -504,4 +534,106 @@ std::map<std::tuple<int, int>, term> dijkstraFindTerms(int n, int m, int *I, int
         }
     }
     return constraints;
+}
+
+// std::vector<int> regionAssignment(int n, int nPivots, std::vector<int> pivots, int *I, int *J, double *V)
+// {
+//     std::queue<int> q1;
+//     std::queue<int> q2;
+
+//     std::vector<bool> mark(n, false);
+//     std::vector<int> regionAssignment(n, -1);
+//     std::map
+// }
+
+std::vector<term> multiSourcePartition(int n, int m, int nPivots, std::vector<int> pivots, std::map<int, std::vector<int>> regions, std::vector<std::vector<int>> graph, int *I, int *J, double *V)
+{
+    std::map<int, int> regionAssignment;
+    for (std::map<int, std::vector<int>>::iterator it = regions.begin(); it != regions.end(); it++)
+    {
+        for (int i : it->second)
+        {
+            regionAssignment[i] = it->first;
+        }
+    }
+
+    std::map<std::tuple<int, int>, term> constraints = dijkstraFindTerms(n, m, I, J, V);
+    std::vector<term> terms = {};
+    std::map<int, int> s;
+
+    for (int p : pivots)
+    {
+        std::vector<double> shortestPath = dijkstra(n, m, p, I, J, V);
+        std::queue<int> q1;
+        std::queue<int> q2;
+
+        std::vector<bool> mark(n, false);
+
+        mark[p] = true;
+        q1.push(p);
+        s[p] = 1;
+        q1.push(-1);
+        int dist = 0;
+        int preDist = 1;
+        while (q1.size() > 1)
+        {
+            int index = q1.front();
+            q1.pop();
+
+            if (index < 0)
+            {
+                q1.push(-1);
+                q2.push(-1);
+                dist++;
+                if (s[p] < regions[p].size())
+                {
+                    if ((dist % preDist == 0) && (dist / preDist == 2))
+                    {
+                        preDist++;
+                        while (!q2.empty())
+                        {
+                            int regionalIndex = q2.front();
+                            q2.pop();
+                            if (regionalIndex < 0)
+                            {
+                                break;
+                            }
+
+                            int currentRegion = regionAssignment[regionalIndex];
+                            s[currentRegion]++;
+                        }
+                    }
+                }
+
+                continue;
+            }
+
+            if ((p != index) && (graph[p][index] == 0) && (constraints.find({p, index}) == constraints.end()) && (constraints.find({index, p}) == constraints.end()))
+            {
+                double wij = s[p] / std::pow(shortestPath[index], 2);
+                auto tempTerm = term(index, p, shortestPath[index], wij, 0);
+                constraints[{p, index}] = tempTerm;
+            }
+
+            for (int j : graph[p])
+            {
+                if ((j == 0) && (!mark[j]))
+                {
+                    mark[j] = true;
+                    q1.push(j);
+                    if (std::find(regions.begin(), regions.end(), j) != regions.end())
+                    {
+                        q2.push(j);
+                    }
+                }
+            }
+        }
+    }
+
+    for (std::map<std::tuple<int, int>, term>::iterator it = constraints.begin(); it != constraints.end(); it++)
+    {
+        terms.push_back(it->second);
+    }
+
+    return terms;
 }
