@@ -22,15 +22,20 @@ struct term
 
 std::vector<std::vector<int>> build_graph_unweighted(int n, int m, int *I, int *J);
 std::vector<std::vector<edge>> build_graph_weighted(int n, int m, int *I, int *J, double *V);
+template <typename T>
+std::vector<T> buildGraphArray(int n, int m, int *I, int *J, T *V);
 
-int *randomPivots(int n, int nPivots, int *I, int *J);
+std::vector<int> randomPivots(int n, int nPivots, int *I, int *J);
 std::vector<int> misFitration(int n, int m, int nPivots, int *I, int *J, double *V);
-std::vector<int> maxMinEuclidean(int n, int nPivots, int *I, int *J, double *V);
+std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinEuclidean(int n, int m, int nPivots, int *I, int *J, double *V);
 std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, int m, int nPivots, int *I, int *J, double *V);
 std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int n, int nPivots, int *I, int *J, double *V);
 std::vector<int> kMeansLayout(int n, int nPivots, int *I, int *J, double *V);
 
-std::vector<double> euclideanDist(double *coordinates, int pivot);
+template <typename T>
+std::vector<double> euclideanDist(int n, std::vector<T> coordinates, int pivot);
+template <class Iter_T, class Iter2_T>
+double vectorDistance(Iter_T first, Iter_T last, Iter2_T first2);
 std::vector<double> dijkstra(int n, int m, int source, int *I, int *J, double *V);
 std::vector<int> bfs(int n, int m, int source, int *I, int *J);
 
@@ -110,6 +115,45 @@ std::vector<std::vector<edge>> build_graph_weighted(int n, int m, int *I, int *J
     return graph;
 }
 
+template <typename T>
+std::vector<T> buildGraphArray(int n, int m, int *I, int *J, T *V)
+{
+    std::vector<std::unordered_map<int, T>> undirected(n);
+    std::vector<T> graph(n * n, 0);
+
+    for (int ij = 0; ij < m; ij++)
+    {
+        int i = I[ij], j = J[ij];
+        if (i >= n || j >= n)
+        {
+            throw "i or j bigger than n";
+        }
+
+        double v = V[ij];
+        if (v <= 0)
+        {
+            throw "v less or equal 0";
+        }
+
+        if (undirected[j].find(i) == undirected[j].end())
+        {
+            undirected[i].insert({j, v});
+            undirected[j].insert({i, v});
+            graph[i * n + j] = v;
+            graph[j * n + i] = v;
+        }
+        else
+        {
+            if (undirected[j][i] != v)
+            {
+                throw "graph weights not symmetric";
+            }
+        }
+    }
+
+    return graph;
+}
+
 // dijkstra algorithm to find shortest paths to every other vertices from source node
 std::vector<double> dijkstra(int n, int m, int source, int *I, int *J, double *V)
 {
@@ -183,15 +227,14 @@ std::vector<int> bfs(int n, int m, int source, int *I, int *J)
     return d;
 }
 
-int *randomPivots(int n, int nPivots, int *I, int *J)
+std::vector<int> randomPivots(int n, int nPivots, int *I, int *J)
 {
     std::srand(time(0));
-
-    int pivots[nPivots] = {};
+    std::vector<int> pivots;
 
     for (int i = 0; i < nPivots; i++)
     {
-        pivots[i] = rand() % n;
+        pivots.push_back(rand() % n);
     }
 
     return pivots;
@@ -254,7 +297,7 @@ std::vector<int> misFitration(int n, int m, int nPivots, int *I, int *J, double 
     return pivots;
 }
 
-std::vector<int> maxMinEuclidean(int n, int nPivots, int *I, int *J, double *V)
+std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinEuclidean(int n, int m, int nPivots, int *I, int *J, double *V)
 {
     std::srand(time(0));
 
@@ -262,9 +305,11 @@ std::vector<int> maxMinEuclidean(int n, int nPivots, int *I, int *J, double *V)
 
     std::vector<int> pivots = {p0};
 
-    double shortestPaths[n][n];
+    std::vector<double> graph = buildGraphArray(n, m, I, J, V);
+
     std::map<int, std::vector<double>> shortestDist;
-    shortestDist[p0] = euclideanDist((double *)shortestPaths, p0);
+
+    shortestDist[p0] = euclideanDist(n, graph, p0);
 
     std::vector<std::tuple<double, int>> mins;
     for (int i = 0; i < n; i++)
@@ -285,7 +330,7 @@ std::vector<int> maxMinEuclidean(int n, int nPivots, int *I, int *J, double *V)
 
         pivots.push_back(argMax);
 
-        shortestDist[pivots[i]] = euclideanDist((double *)shortestPaths, pivots[i]);
+        shortestDist[pivots[i]] = euclideanDist(n, graph, pivots[i]);
         for (int j = 0; j < n; j++)
         {
             double temp = shortestDist[pivots[i]][j];
@@ -296,19 +341,48 @@ std::vector<int> maxMinEuclidean(int n, int nPivots, int *I, int *J, double *V)
         }
     }
 
-    return pivots;
-}
+    std::map<int, std::vector<int>> regions;
 
-std::vector<double> euclideanDist(double *coordinates, int pivot)
-{
-    std::vector<double> dist;
-    int n = sizeof(coordinates[0]);
+    for (int p : pivots)
+    {
+        regions.insert(std::pair<int, std::vector<int>>(p, {}));
+    }
+
     for (int i = 0; i < n; i++)
     {
-        dist.push_back(std::norm(std::transform(coordinates[pivot], coordinates[pivot] + n, coordinates[i], std::minus<double>())));
+        int closestPivot = std::get<1>(mins[i]);
+        regions[closestPivot].push_back(i);
+    }
+
+    return {pivots, regions};
+}
+
+template <typename T>
+std::vector<double> euclideanDist(int n, std::vector<T> coordinates, int pivot)
+{
+    std::vector<T> pivotCoordinate(coordinates.begin() + n * pivot, coordinates.begin() + n * (pivot + 1));
+    std::vector<double> dist;
+
+    for (int i = 0; i < n; i++)
+    {
+        std::vector<T> vertexCoordinate(coordinates.begin() + n * i, coordinates.begin() + n * (i + 1));
+        dist.push_back(vectorDistance(pivotCoordinate.begin(), pivotCoordinate.end(), vertexCoordinate.begin()));
     }
 
     return dist;
+}
+
+template <class Iter_T, class Iter2_T>
+double vectorDistance(Iter_T first, Iter_T last, Iter2_T first2)
+{
+    double result = 0.0;
+    while (first != last)
+    {
+        double dist = (*first++) - (*first2++);
+        result += dist * dist;
+    }
+
+    return result > 0.0 ? std::sqrt(result) : throw "accumulation of distances square is negative";
 }
 
 std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, int m, int nPivots, int *I, int *J, double *V)
@@ -535,16 +609,6 @@ std::map<std::tuple<int, int>, term> dijkstraFindTerms(int n, int m, int *I, int
     }
     return constraints;
 }
-
-// std::vector<int> regionAssignment(int n, int nPivots, std::vector<int> pivots, int *I, int *J, double *V)
-// {
-//     std::queue<int> q1;
-//     std::queue<int> q2;
-
-//     std::vector<bool> mark(n, false);
-//     std::vector<int> regionAssignment(n, -1);
-//     std::map
-// }
 
 std::vector<term> multiSourcePartition(int n, int m, int nPivots, std::vector<int> pivots, std::map<int, std::vector<int>> regions, std::vector<std::vector<int>> graph, int *I, int *J, double *V)
 {
