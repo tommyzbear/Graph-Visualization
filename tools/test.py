@@ -8,7 +8,7 @@ from matplotlib import collections as mc
 import time
 from sklearn.cluster import KMeans
 from scipy.spatial import distance
-from tools.MSSP import MSSP, MSSP_unweighted, vertices_partition
+from tools.MSSP import MSSP, MSSP_unweighted, vertices_partition, MSSP_ultimate
 
 
 graph_name = 'dwt_1005'
@@ -67,8 +67,9 @@ for c in centroids:
     pivots.append(euc_dist.argmin())
 
 # dists, weights = MSSP(graph, pivots, shortest_paths)
-regions, region_assignment = vertices_partition(graph, pivots)
-dists, weights = MSSP_unweighted(graph, pivots, shortest_paths, regions, region_assignment)
+# regions, region_assignment = vertices_partition(graph, pivots)
+# dists, weights = MSSP_unweighted(graph, pivots, regions)
+dists, weights = MSSP_ultimate(graph, pivots)
 
 constraints = []
 for ij in dists.keys():
