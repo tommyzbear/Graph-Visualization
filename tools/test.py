@@ -8,7 +8,7 @@ from matplotlib import collections as mc
 import time
 from sklearn.cluster import KMeans
 from scipy.spatial import distance
-from tools.MSSP import MSSP, MSSP_unweighted, vertices_partition, MSSP_ultimate
+from tools.MSSP import MSSP_ultimate
 
 
 graph_name = 'dwt_1005'
