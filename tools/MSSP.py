@@ -272,6 +272,12 @@ def MSSP_ultimate(graph, pivots):
                     break
             prev_dist[pivot_index] += 1
 
+        if pivot_index != index and graph[pivot_index, index] == 0 and (pivot_index, index) not in weights and (index, pivot_index) not in weights:
+            weights[(index, pivot_index)] = s[pivot_index] / level[pivot_index][index] ** 2
+            if (pivot_index, index) not in weights:
+                weights[(pivot_index, index)] = 0
+            dists[(pivot_index, index)] = dists[(index, pivot_index)] = level[pivot_index][index]
+
         neighbours = graph_arr[index].nonzero()[0]
         for neighbour in neighbours:
             if not mark_for_region[neighbour]:
@@ -286,6 +292,7 @@ def MSSP_ultimate(graph, pivots):
                 mark_for_weights[pivot_index][neighbour] = True
                 level[pivot_index][neighbour] = cur_level + 1
                 q3.put((neighbour, pivot_index))
+
     while not q3.empty():
         index, pivot_index = q3.get()
         cur_level = level[pivot_index][index]
