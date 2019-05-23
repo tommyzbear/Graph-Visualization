@@ -40,8 +40,8 @@ std::vector<double> dijkstra(int n, int m, int source, int *I, int *J, double *V
 std::vector<int> bfs(int n, int m, int source, int *I, int *J);
 
 std::vector<term> naivePartition(int n, int m, int nPivots, std::vector<int> pivots, std::map<int, std::vector<int>> regions, int *I, int *J, double *V);
-// std::vector<int> regionAssignment(int n, int nPivots, std::vector<int> pivots, int *I, int *J, double *V);
 std::vector<term> multiSourcePartition(int n, int m, int nPivots, std::vector<int> pivots, std::map<int, std::vector<int>> regions, std::vector<std::vector<int>> graph, int *I, int *J, double *V);
+std::vector<term> multiSourcePartitionUnweighted(int n, int m, int nPivots, std::vector<int> pivots, int *I, int *J, double *V);
 std::map<std::tuple<int, int>, term> dijkstraFindTerms(int n, int m, int *I, int *J, double *V);
 
 struct edge
@@ -681,7 +681,7 @@ std::vector<term> multiSourcePartition(int n, int m, int nPivots, std::vector<in
 
             for (int j : graph[p])
             {
-                if ((j == 0) && (!mark[j]))
+                if ((j != 0) && (!mark[j]))
                 {
                     mark[j] = true;
                     q1.push(j);
@@ -700,4 +700,168 @@ std::vector<term> multiSourcePartition(int n, int m, int nPivots, std::vector<in
     }
 
     return terms;
+}
+
+std::vector<term> multiSourcePartitionUnweighted(int n, int m, int nPivots, std::vector<int> pivots, int *I, int *J, int *V)
+{
+    std::vector<int> graph = buildGraphArray(n, m, I, J, V);
+    std::map<std::tuple<int, int>, term> terms;
+
+    for (int e = 0; e < sizeof(I); e++)
+    {
+        int i = I[e], j = J[e];
+        double v = V[e];
+        if (i < j)
+        {
+            double w = 1 / pow(v, 2);
+            terms[std::tuple<int, int>(i, j)] = term(i, j, v, w, w);
+        }
+    }
+
+    // initialize s for each pivot
+    std::map<int, int> s;
+
+    std::vector<bool> markForRegion(n, false);
+    std::map<int, std::vector<bool>> markForWeights;
+    std::map<int, std::vector<int>> level;
+    std::map<int, std::vector<int>> regions;
+    std::vector<int> regionAssignment(n, -1);
+    std::queue<int> q1;
+    std::map<int, std::queue<int>> q2;
+    std::queue<std::tuple<int, int>> q3;
+
+    std::map<int, int> dist;
+    std::map<int, int> prevDist;
+
+    for (int p : pivots)
+    {
+        regions[p] = std::vector<int>{p};
+        regionAssignment[p] = p;
+        q1.push(p);
+        q2[p] = std::queue<int>();
+        markForRegion[p] = true;
+        markForWeights[p] = std::vector<bool>(n, false);
+        markForWeights[p][p] = true;
+        level[p] = std::vector<int>(n, 0);
+        s[p] = 1;
+        dist[p] = 0;
+        prevDist[p] = 1;
+    }
+
+    while (!q1.empty())
+    {
+        int index = q1.front();
+        q1.pop();
+        int pivot_index = regionAssignment[index];
+        int curLevel = level[pivot_index][index];
+
+        if (curLevel > dist[pivot_index])
+            dist[pivot_index] = curLevel;
+
+        if ((dist[pivot_index] % prevDist[pivot_index] == 0) && (dist[pivot_index] / prevDist[pivot_index] == 2))
+        {
+            while (!q2[pivot_index].empty())
+            {
+                int regionalIndex = q2[pivot_index].front();
+                if (level[pivot_index][regionalIndex] <= prevDist[pivot_index])
+                {
+                    s[pivot_index]++;
+                    q2[pivot_index].pop();
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            prevDist[pivot_index]++;
+        }
+
+        if ((pivot_index != index) && (graph[n * pivot_index + index] == 0) && (terms.find(std::tuple(pivot_index, index)) == terms.end()) && (terms.find(std::tuple<int, int>(index, pivot_index)) == terms.end()))
+        {
+            double wij = s[pivot_index] / pow(level[pivot_index][index], 2);
+            terms[std::tuple(index, pivot_index)] = term(index, pivot_index, level[pivot_index][index], wij, 0);
+        }
+
+        for (int i = n * pivot_index; i < n * (pivot_index + 1); i++)
+        {
+            if (graph[i] != 0)
+            {
+                int neighbour = i - n * pivot_index;
+                if (!markForRegion[neighbour])
+                {
+                    markForRegion[neighbour] = true;
+                    markForWeights[pivot_index][neighbour] = true;
+                    level[pivot_index][neighbour] = curLevel + 1;
+                    q1.push(neighbour);
+                    regionAssignment[neighbour] = pivot_index;
+                    regions[pivot_index].push_back(neighbour);
+                    q2[pivot_index].push(neighbour);
+                }
+                if (!markForWeights[pivot_index][neighbour])
+                {
+                    markForWeights[pivot_index][neighbour] = true;
+                    level[pivot_index][neighbour] = curLevel + 1;
+                    q3.push(std::tuple(neighbour, pivot_index));
+                }
+            }
+        }
+    }
+
+    while (!q3.empty())
+    {
+        int index = std::get<0>(q3.front());
+        int pivot_index = std::get<1>(q3.front());
+        q3.pop();
+        int curLevel = level[pivot_index][index];
+
+        if (curLevel > dist[pivot_index])
+            dist[pivot_index] = curLevel;
+
+        if ((dist[pivot_index] % prevDist[pivot_index] == 0) && (dist[pivot_index] / prevDist[pivot_index] == 2))
+        {
+            while (!q2[pivot_index].empty())
+            {
+                int regionalIndex = q2[pivot_index].front();
+                if (level[pivot_index][regionalIndex] <= prevDist[pivot_index])
+                {
+                    s[pivot_index]++;
+                    q2[pivot_index].pop();
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            prevDist[pivot_index]++;
+        }
+
+        double wij = s[pivot_index] / pow(level[pivot_index][index], 2);
+        terms[std::tuple(index, pivot_index)] = term(index, pivot_index, level[pivot_index][index], wij, 0);
+
+        for (int i = n * pivot_index; i < n * (pivot_index + 1); i++)
+        {
+            if (graph[i] != 0)
+            {
+                int neighbour = i - n * pivot_index;
+
+                if (!markForWeights[pivot_index][neighbour])
+                {
+                    markForWeights[pivot_index][neighbour] = true;
+                    level[pivot_index][neighbour] = curLevel + 1;
+                    q3.push(std::tuple(neighbour, pivot_index));
+                }
+            }
+        }
+    }
+
+    std::vector<term> terms_vec;
+
+    for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
+    {
+        terms_vec.push_back(it->second);
+    }
+
+    return terms_vec;
 }
