@@ -374,9 +374,9 @@ def max_min_euclidean(graph, n_pivots=200, sgd_iter=15, epsilon=0.1, unweighted=
     pivots = [p0]
 
     # convert graph vertices to Euclidean Space using the shortest paths entries
-    shortest_paths = cs.shortest_path(graph, unweighted=unweighted)
+    graph_arr = graph.toarray()
 
-    shortest_dist = {p0: euclidean_dist(shortest_paths, p0)}
+    shortest_dist = {p0: euclidean_dist(graph_arr, p0)}
 
     mins = []
     for i in range(n):
@@ -388,7 +388,7 @@ def max_min_euclidean(graph, n_pivots=200, sgd_iter=15, epsilon=0.1, unweighted=
                 argmax = k
         pivots.append(argmax)
 
-        shortest_dist[pivots[i]] = euclidean_dist(shortest_paths, pivots[i])
+        shortest_dist[pivots[i]] = euclidean_dist(graph_arr, pivots[i])
         for j in range(n):
             temp = shortest_dist[pivots[i]][j]
             if temp < mins[j][0]:
@@ -402,6 +402,8 @@ def max_min_euclidean(graph, n_pivots=200, sgd_iter=15, epsilon=0.1, unweighted=
     for i in range(n):
         closest_pivot = mins[i][1]
         regions[closest_pivot].append(i)
+
+    shortest_paths = cs.shortest_path(graph)
 
     weights, dists = sssp(n, graph, shortest_paths, regions, pivots)
 
