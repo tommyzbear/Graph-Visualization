@@ -22,8 +22,8 @@ n = max(max(I), max(J)) + 1
 X = np.random.rand(n, 2)
 
 start_time = time.time()
-# cpp.sparse_layout_MSSP_unweightd(X, I, J, 1000, 30, 1.0)
-cpp.sparse_layout_naive_unweighted(X, I, J, "mis", 200, 15, 1.0)
+cpp.sparse_layout_MSSP_unweightd(X, I, J, "max_min_euc", 200, 15, 1.0)
+# cpp.sparse_layout_naive_unweighted(X, I, J, "max_min_euc", 200, 15, 1.0)
 # cpp.layout_unweighted(X, I, J, 30, 1.0)
 # cpp.layout_weighted(X, I, J, V, 30, 1.0)
 end_time = time.time()
