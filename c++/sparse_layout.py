@@ -104,6 +104,10 @@ def unweighted_edge_check(len_I, len_J):
     return _sparse_layout.unweighted_edge_check(len_I, len_J)
 unweighted_edge_check = _sparse_layout.unweighted_edge_check
 
+def weighted_edge_check(len_I, len_J, len_V):
+    return _sparse_layout.weighted_edge_check(len_I, len_J, len_V)
+weighted_edge_check = _sparse_layout.weighted_edge_check
+
 def pivot_check(k, n):
     return _sparse_layout.pivot_check(k, n)
 pivot_check = _sparse_layout.pivot_check
@@ -111,6 +115,10 @@ pivot_check = _sparse_layout.pivot_check
 def layout_unweighted(*args):
     return _sparse_layout.layout_unweighted(*args)
 layout_unweighted = _sparse_layout.layout_unweighted
+
+def layout_weighted(*args):
+    return _sparse_layout.layout_weighted(*args)
+layout_weighted = _sparse_layout.layout_weighted
 
 def sparse_layout_naive_unweighted(*args):
     return _sparse_layout.sparse_layout_naive_unweighted(*args)

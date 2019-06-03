@@ -12,6 +12,21 @@
 #include <queue>
 #include <unordered_set>
 #include <iomanip>
+#include <string.h>
+// #include <ctime>
+// #include <tbb/parallel_for.h>
+
+enum samplingSchemeCode
+{
+    erandom,
+    emisFiltration,
+    emaxMinEuc,
+    emaxMinSP,
+    emaxMinRandomSP,
+    ekMeans,
+    ekMeansSP,
+    ekMeansMaxMinSP
+};
 
 struct edge
 {
@@ -49,19 +64,21 @@ std::vector<double> dijkstra(int n, int m, int source, int *I, int *J, double *V
 std::vector<int> bfs(int n, int m, int source, int *I, int *J);
 // Naive find terms
 std::vector<term> bfs(int n, int m, int *I, int *J);
+std::vector<term> dijkstra(int n, int m, int *I, int *J, double *V);
 
 // Sampling schemes
-std::vector<int> randomPivots(int n, int nPivots);
-std::vector<int> misFitration(int n, int m, int nPivots, int *I, int *J, double *V);
+void randomPivots(int n, int nPivots);
+void misFitration(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J);
 std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinEuclidean(int n, int m, int nPivots, int *I, int *J, double *V);
-std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, int m, int nPivots, int *I, int *J, double *V);
-std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int n, int nPivots, int *I, int *J, double *V);
+void maxMinSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J);
+void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J);
 std::vector<int> kMeansLayout(int n, int nPivots, int *I, int *J, double *V);
 
 template <typename T>
 std::vector<double> euclideanDist(int n, std::vector<T> coordinates, int pivot);
 template <class Iter_T, class Iter2_T>
 double vectorDistance(Iter_T first, Iter_T last, Iter2_T first2);
+samplingSchemeCode hashSamplingScheme(std::string const &inString);
 
 // Regions and terms computation
 // std::vector<term> naivePartition(int n, int m, int nPivots, std::vector<int> pivots, std::map<int, std::vector<int>> regions, int *I, int *J, double *V);
@@ -74,7 +91,7 @@ void sgd(double *X, std::vector<term> &terms, const std::vector<double> &etas);
 
 // Layout
 void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, double eps);
-void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, int k, int t_max, double eps);
+void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
 void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, int k, int t_max, double eps);
 
 std::vector<std::vector<int>> buildGraphUnweighted(int n, int m, int *I, int *J)
@@ -297,10 +314,70 @@ std::vector<term> bfs(int n, int m, int *I, int *J)
     return terms;
 }
 
-std::vector<int> randomPivots(int n, int nPivots)
+std::vector<term> dijkstra(int n, int m, int *I, int *J, double *V)
+{
+    auto graph = buildGraphWeighted(n, m, I, J, V);
+
+    int nC2 = (n * (n - 1)) / 2;
+    std::vector<term> terms;
+    terms.reserve(nC2);
+
+    int terms_size_goal = 0; // to keep track of when to stop searching i<j
+
+    for (int source = 0; source < n - 1; source++) // no need to do final vertex because i<j
+    {
+        std::vector<bool> visited(n, false);
+        std::vector<double> d(n, std::numeric_limits<double>::max()); // init 'tentative' distances to infinity
+
+        // I am not using a fibonacci heap. I AM NOT USING A FIBONACCI HEAP
+        // edges are used 'invisibly' here
+        std::priority_queue<edge, std::vector<edge>, edge_comp> pq;
+
+        d[source] = 0;
+        pq.push(edge(source, 0));
+
+        terms_size_goal += n - source - 1; // this is how many terms exist for i<j
+
+        while (!pq.empty() && terms.size() <= terms_size_goal)
+        {
+            int current = pq.top().target;
+            double d_ij = pq.top().weight;
+            pq.pop();
+
+            if (!visited[current]) // ignore redundant elements in queue
+            {
+                visited[current] = true;
+
+                if (source < current) // only add terms for i<j
+                {
+                    double w_ij = 1.0 / (d_ij * d_ij);
+                    terms.push_back(term(source, current, d_ij, w_ij, w_ij));
+                }
+                for (edge e : graph[current])
+                {
+                    // here the edge is not 'invisible'
+                    int next = e.target;
+                    double weight = e.weight;
+
+                    if (d[next] > d_ij + weight)
+                    {
+                        d[next] = d_ij + weight; // update tentative value of d
+                        pq.push(edge(next, d[next]));
+                    }
+                }
+            }
+        }
+        if (terms.size() != terms_size_goal)
+        {
+            throw "graph is not strongly connected";
+        }
+    }
+    return terms;
+}
+
+void randomPivots(int n, int nPivots, std::vector<int> &pivots)
 {
     std::srand(time(0));
-    std::vector<int> pivots;
 
     for (int i = 0; i < nPivots; i++)
     {
@@ -308,16 +385,14 @@ std::vector<int> randomPivots(int n, int nPivots)
         pivots.push_back(p);
         std::cerr << "pivot no." << i << " is " << p << std::endl;
     }
-
-    return pivots;
 }
 
-std::vector<int> misFitration(int n, int m, int nPivots, int *I, int *J, double *V)
+void misFitration(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J)
 {
     int layerIndex = 1;
 
-    std::vector<int> previousPivot{};
-    std::vector<int> pivots(n);
+    std::vector<int> previousPivot;
+    pivots = std::vector<int>(n);
     std::vector<int> remainingVertices(n);
     int numOfNodes = n;
 
@@ -336,37 +411,41 @@ std::vector<int> misFitration(int n, int m, int nPivots, int *I, int *J, double 
             std::vector<int> pathLengths = bfs(n, m, pTemp, I, J);
             pivots.push_back(pTemp);
             std::vector<int> remainingVerticesTemp;
-            for (int i = 0; i < sizeof(remainingVertices); i++)
+            for (int i = 0; i < remainingVertices.size(); i++)
             {
-                if (pathLengths[remainingVertices[i]] > pow(2, layerIndex) && (std::find(pivots.begin(), pivots.end(), remainingVertices[i]) != pivots.end()))
+                if (pathLengths[remainingVertices[i]] > pow(2, layerIndex) && (std::find(pivots.begin(), pivots.end(), remainingVertices[i]) == pivots.end()))
                 {
                     remainingVerticesTemp.push_back(remainingVertices[i]);
                 }
             }
             empty = remainingVerticesTemp.empty();
-            pTemp = remainingVerticesTemp[rand() % remainingVerticesTemp.size()];
+            if(!empty){
+                pTemp = remainingVerticesTemp[rand() % remainingVerticesTemp.size()];
+            }
+            remainingVertices = remainingVerticesTemp;
         }
         layerIndex++;
         numOfNodes = pivots.size();
     }
 
-    for (int i = 0; i < previousPivot.size(); i++)
+    if (pivots.size() < nPivots)
     {
-        if (std::find(pivots.begin(), pivots.end(), previousPivot[i]) != pivots.end())
+        for (int i = 0; i < previousPivot.size(); i++)
         {
+            if (std::find(pivots.begin(), pivots.end(), previousPivot[i]) != pivots.end())
+            {
+                previousPivot.erase(previousPivot.begin() + i);
+            }
+        }
+
+        while (pivots.size() < nPivots)
+        {
+            int i = rand() % previousPivot.size();
+            int p = previousPivot[i];
+            pivots.push_back(p);
             previousPivot.erase(previousPivot.begin() + i);
         }
     }
-
-    while (pivots.size() < nPivots)
-    {
-        int i = rand() % previousPivot.size();
-        int p = previousPivot[i];
-        pivots.push_back(p);
-        previousPivot.erase(previousPivot.begin() + i);
-    }
-
-    return pivots;
 }
 
 std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinEuclidean(int n, int m, int nPivots, int *I, int *J, double *V)
@@ -457,21 +536,21 @@ double vectorDistance(Iter_T first, Iter_T last, Iter2_T first2)
     return result > 0.0 ? std::sqrt(result) : throw "accumulation of distances square is negative";
 }
 
-std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, int m, int nPivots, int *I, int *J, double *V)
+void maxMinSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J)
 {
     std::srand(time(0));
 
     int p0 = rand() % n;
 
-    std::vector<int> pivots = {p0};
+    pivots.push_back(p0);
 
-    std::vector<double> shortestPaths = dijkstra(n, m, p0, I, J, V);
+    std::vector<std::tuple<double, int>> mins(n);
 
-    std::vector<std::tuple<double, int>> mins;
+    shortestPaths[p0] = bfs(n, m, p0, I, J);
 
     for (int i = 0; i < n; i++)
     {
-        mins.push_back({shortestPaths[i], p0});
+        mins[i] = {shortestPaths[p0][i], p0};
     }
 
     for (int i = 1; i < nPivots; i++)
@@ -485,25 +564,22 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, in
             }
         }
 
-        shortestPaths = dijkstra(n, m, argMax, I, J, V);
-
+        shortestPaths[argMax] = bfs(n, m, argMax, I, J);
         pivots.push_back(argMax);
 
         for (int j = 0; j < n; j++)
         {
-            double temp = shortestPaths[j];
+            double temp = shortestPaths[argMax][j];
             if (temp < std::get<0>(mins[j]))
             {
-                mins[j] = {temp, pivots[i]};
+                mins[j] = {temp, argMax};
             }
         }
     }
 
-    std::map<int, std::vector<int>> regions;
-
     for (int p : pivots)
     {
-        regions.insert(std::pair<int, std::vector<int>>(p, {}));
+        regions[p] = std::vector<int>{};
     }
 
     for (int i = 0; i < n; i++)
@@ -511,25 +587,23 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinSP(int n, in
         int closestPivot = std::get<1>(mins[i]);
         regions[closestPivot].push_back(i);
     }
-
-    return {pivots, regions};
 }
 
-std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int n, int m, int nPivots, int *I, int *J, double *V)
+void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J)
 {
     std::srand(time(0));
     std::default_random_engine generator;
 
     int p0 = rand() % n;
 
-    std::vector<int> pivots = {p0};
+    pivots.push_back(p0);
 
-    std::vector<double> shortestPaths = dijkstra(n, m, p0, I, J, V);
+    shortestPaths[p0] = bfs(n, m, p0, I, J);
 
     std::vector<std::tuple<double, int>> mins;
     for (int i = 0; i < n; i++)
     {
-        mins.push_back({shortestPaths[i], p0});
+        mins.push_back({shortestPaths[p0][i], p0});
     }
 
     for (int i = 1; i < nPivots; i++)
@@ -554,11 +628,11 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int
             }
         }
 
-        shortestPaths = dijkstra(n, m, pivots[i], I, J, V);
+        shortestPaths[pivots[i]] = bfs(n, m, pivots[i], I, J);
 
         for (int j = 0; j < n; j++)
         {
-            double temp = shortestPaths[j];
+            double temp = shortestPaths[pivots[i]][j];
             if (temp < std::get<0>(mins[j]))
             {
                 mins[j] = {temp, pivots[i]};
@@ -566,11 +640,9 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int
         }
     }
 
-    std::map<int, std::vector<int>> regions;
-
     for (int p : pivots)
     {
-        regions.insert(std::pair<int, std::vector<int>>(p, {}));
+        regions[p] = {};
     }
 
     for (int i = 0; i < n; i++)
@@ -578,8 +650,6 @@ std::tuple<std::vector<int>, std::map<int, std::vector<int>>> maxMinRandomSP(int
         int closestPivot = std::get<1>(mins[i]);
         regions[closestPivot].push_back(i);
     }
-
-    return {pivots, regions};
 }
 
 std::vector<int> kMeansLayout(int n, int nPivots, int *I, int *J, double *V)
@@ -923,7 +993,6 @@ void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, doubl
     try
     {
         std::vector<term> terms = bfs(n, m, I, J);
-
         std::vector<double> etas = schedule(terms, t_max, eps);
         sgd(X, terms, etas);
     }
@@ -933,50 +1002,178 @@ void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, doubl
     }
 }
 
-void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, int k, int t_max, double eps)
+void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, int t_max, double eps)
 {
     try
     {
-        std::vector<int> pivots = randomPivots(n, k);
+        std::vector<term> terms = dijkstra(n, m, I, J, V);
+        std::vector<double> etas = schedule(terms, t_max, eps);
+        sgd(X, terms, etas);
+    }
+    catch (const char *msg)
+    {
+        std::cerr << "Error: " << msg << std::endl;
+    }
+}
+
+samplingSchemeCode hashSamplingScheme(const char *inString)
+{
+    if (strcmp(inString, "random") == 0)
+    {
+        std::cerr << "Using Random sampling scheme" << std::endl;
+        return erandom;
+    }
+    if (strcmp(inString, "mis") == 0)
+    {
+        std::cerr << "Using MIS Filtration sampling scheme" << std::endl;
+        return emisFiltration;
+    }
+    if (strcmp(inString, "max_min_euc") == 0)
+    {
+        std::cerr << "Using Max-Min Euclidean sampling scheme" << std::endl;
+        return emaxMinEuc;
+    }
+    if (strcmp(inString, "max_min_sp") == 0)
+    {
+        std::cerr << "Using Max-Min SP sampling scheme" << std::endl;
+        return emaxMinSP;
+    }
+    if (strcmp(inString, "max_min_random_sp") == 0)
+    {
+        std::cerr << "Using Max-Min Random SP sampling scheme" << std::endl;
+        return emaxMinRandomSP;
+    }
+    if (strcmp(inString, "k_means") == 0)
+    {
+        std::cerr << "Using K-Means Layout sampling scheme" << std::endl;
+        return ekMeans;
+    }
+    if (strcmp(inString, "k_means_sp") == 0)
+    {
+        std::cerr << "Using K-Means SP sampling scheme" << std::endl;
+        return ekMeansSP;
+    }
+    if (strcmp(inString, "k_means_max_min_sp") == 0)
+    {
+        std::cerr << "Using K-Means Max-Min SP sampling scheme" << std::endl;
+        return ekMeansMaxMinSP;
+    }
+}
+
+void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps)
+{
+    try
+    {
+        std::vector<int> pivots;
         std::map<int, std::vector<int>> shortestPaths;
         auto graph = buildGraphUnweighted(n, m, I, J);
+        std::map<int, std::vector<int>> regions;
 
-        for (int p : pivots)
+        switch (hashSamplingScheme(sampling_scheme))
         {
-            shortestPaths[p] = bfs(n, m, p, I, J);
-        }
-
-        // initialize shortest dist to closest pivot pair
-        std::vector<std::tuple<int, int>> mins(n);
-        int p0 = pivots[0];
-
-        for (int i = 0; i < n; i++)
+        case erandom:
         {
-            mins[i] = std::make_tuple(shortestPaths[p0][i], p0);
-        }
-
-        for (int i = 1; i < k; i++)
-        {
-            for (int j = 0; j < n; j++)
+            randomPivots(n, k, pivots);
+            // std::clock_t start;
+            // double duration;
+            // start = std::clock();
+            // tbb::parallel_for(0, (int)pivots.size(), [&](int i){
+            //     shortestPaths[pivots[i]] = bfs(n, m, pivots[i], I, J);
+            // });
+            for (int p : pivots)
             {
-                int temp = shortestPaths[pivots[i]][j];
-                if (temp < std::get<0>(mins[j]))
+                shortestPaths[p] = bfs(n, m, p, I, J);
+            }
+            // duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+            // std::cerr << "Duration is: " << duration << "s" << std::endl;
+            // initialize shortest dist to closest pivot pair
+            std::vector<std::tuple<int, int>> mins(n);
+            int p0 = pivots[0];
+
+            for (int i = 0; i < n; i++)
+            {
+                mins[i] = std::make_tuple(shortestPaths[p0][i], p0);
+            }
+
+            for (int i = 1; i < k; i++)
+            {
+                for (int j = 0; j < n; j++)
                 {
-                    mins[j] = std::make_tuple(temp, pivots[i]);
+                    int temp = shortestPaths[pivots[i]][j];
+                    if (temp < std::get<0>(mins[j]))
+                    {
+                        mins[j] = std::make_tuple(temp, pivots[i]);
+                    }
                 }
             }
-        }
 
-        // Naive region partitions
-        std::map<int, std::vector<int>> regions;
-        for (int p : pivots)
-        {
-            regions[p] = std::vector<int>{};
-        }
+            // Naive region partitions
+            for (int p : pivots)
+            {
+                regions[p] = std::vector<int>{};
+            }
 
-        for (int i = 0; i < n; i++)
+            for (int i = 0; i < n; i++)
+            {
+                regions[std::get<1>(mins[i])].push_back(i);
+            }
+
+            break;
+        }
+        case emisFiltration:
         {
-            regions[std::get<1>(mins[i])].push_back(i);
+            misFitration(n, m, k, pivots, I, J);
+
+            for (int p : pivots)
+            {
+                shortestPaths[p] = bfs(n, m, p, I, J);
+            }
+
+            // initialize shortest dist to closest pivot pair
+            std::vector<std::tuple<int, int>> mins(n);
+            int p0 = pivots[0];
+
+            for (int i = 0; i < n; i++)
+            {
+                mins[i] = std::make_tuple(shortestPaths[p0][i], p0);
+            }
+
+            for (int i = 1; i < k; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    int temp = shortestPaths[pivots[i]][j];
+                    if (temp < std::get<0>(mins[j]))
+                    {
+                        mins[j] = std::make_tuple(temp, pivots[i]);
+                    }
+                }
+            }
+
+            // Naive region partitions
+            for (int p : pivots)
+            {
+                regions[p] = std::vector<int>{};
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                regions[std::get<1>(mins[i])].push_back(i);
+            }
+
+            break;
+        }
+        case emaxMinSP:
+        {
+            maxMinSP(n, m, k, shortestPaths, pivots, regions, I, J);
+            break;
+        }
+        case emaxMinRandomSP:
+        {
+            maxMinRandomSP(n, m, k, shortestPaths, pivots, regions, I, J);
+        }
+        default:
+            break;
         }
 
         std::map<std::tuple<int, int>, term> terms;
@@ -1067,7 +1264,8 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, int k
 {
     try
     {
-        std::vector<int> pivots = randomPivots(n, k);
+        std::vector<int> pivots;
+        randomPivots(n, k, pivots);
         std::map<int, std::vector<int>> shortestPaths;
         auto graph = buildGraphUnweighted(n, m, I, J);
         std::map<std::tuple<int, int>, term> terms;

@@ -6,9 +6,12 @@ import matplotlib.pyplot as plt
 from matplotlib import collections as mc
 import time
 
-graph_name = 'vsp_p0291_seymourl_iiasa'
+graph_name = 'dwt_1005'
 mat_data = io.loadmat(graph_name + '.mat')
 graph = mat_data['Problem']['A'][0][0]
+# graph_name = 'commanche_dual'
+# mat_data = io.loadmat(graph_name + '.mat')
+# graph = mat_data['Problem']['A'][0][0]
 
 I, J, V = sparse.find(graph)
 
@@ -20,8 +23,9 @@ X = np.random.rand(n, 2)
 
 start_time = time.time()
 # cpp.sparse_layout_MSSP_unweightd(X, I, J, 1000, 30, 1.0)
-cpp.sparse_layout_naive_unweighted(X, I, J, 1000, 30, 1.0)
+cpp.sparse_layout_naive_unweighted(X, I, J, "mis", 200, 15, 1.0)
 # cpp.layout_unweighted(X, I, J, 30, 1.0)
+# cpp.layout_weighted(X, I, J, V, 30, 1.0)
 end_time = time.time()
 
 print("Computation time: %.2f" % (end_time - start_time))

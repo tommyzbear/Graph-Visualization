@@ -2,7 +2,8 @@
 %{
     #define SWIG_FILE_WITH_INIT
     extern void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, double eps);
-    extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, int k, int t_max, double eps);
+    extern void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, int t_max, double eps);
+    extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
     extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, int k, int t_max, double eps);
 %}
 
@@ -23,13 +24,21 @@
 //direct MDS
 %apply (double *IN_ARRAY1, int DIM1){(double *d, int len_d), (double *w, int len_w), (double *eta, int len_eta)}
 
+// string handling
+%apply (char *STRING, int LENGTH) { (char *data, int size) };
 
 extern void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, double eps);
-extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, int k, int t_max, double eps);
+extern void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, int t_max, double eps);
+extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
 extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, int k, int t_max, double eps);
 
 %rename (layout_unweighted) np_layout_unweighted;
 %exception np_layout_unweighted{
+    $action
+    if(PyErr_Occurred()) SWIG_fail;
+}
+%rename (layout_weighted) np_layout_weighted;
+%exception np_layout_weighted{
     $action
     if(PyErr_Occurred()) SWIG_fail;
 }
@@ -56,6 +65,12 @@ extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J
             PyErr_Format(PyExc_ValueError, "arrays of indices do not have same length");
         }
     }
+    void weighted_edge_check(int len_I, int len_J, int len_V) {
+        if (len_I != len_J || len_J != len_V) {
+            PyErr_Format(PyExc_ValueError, "arrays of indices do not have same length");
+            return;
+        }
+    }
     void pivot_check(int k, int n){
         if (k > n){
             PyErr_Format(PyExc_ValueError, "number of pivots cannot exceed number of vertices");
@@ -66,11 +81,16 @@ extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J
         unweighted_edge_check(len_I, len_J);
         layout_unweighted(n, X, len_I, I, J, t_max, eps);
     }
-    void np_sparse_layout_naive_unweighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J, int k, int t_max, double eps){
+    void np_layout_weighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J, double *V, int len_V, int t_max, double eps){
+        dimension_check(kd);
+        weighted_edge_check(len_I, len_J, len_V);
+        layout_weighted(n, X, len_I, I, J, V, t_max, eps);
+    }
+    void np_sparse_layout_naive_unweighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J, char *data, int size, int k, int t_max, double eps){
         dimension_check(kd);
         unweighted_edge_check(len_I, len_J);
         pivot_check(k, n);
-        sparse_layout_naive_unweighted(n, X, len_I, I, J, k, t_max, eps);
+        sparse_layout_naive_unweighted(n, X, len_I, I, J, data, k, t_max, eps);
     }
     void np_sparse_layout_MSSP_unweighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J, int k, int t_max, double eps){
         dimension_check(kd);
