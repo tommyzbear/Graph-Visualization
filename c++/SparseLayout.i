@@ -6,6 +6,7 @@
     extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
     extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
     extern void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
+    extern void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
 %}
 
 %include "numpy.i"
@@ -33,6 +34,7 @@ extern void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, 
 extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
 extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
 extern void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
+extern void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
 
 %rename (layout_unweighted) np_layout_unweighted;
 %exception np_layout_unweighted{
@@ -56,6 +58,11 @@ extern void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J
 }
 %rename (sparse_layout_naive_weighted) np_sparse_layout_naive_weighted;
 %exception np_sparse_layout_naive_weighted{
+    $action
+    if(PyErr_Occurred()) SWIG_fail;
+}
+%rename (sparse_layout_MSSP_weightd) np_sparse_layout_MSSP_weighted;
+%exception np_sparse_layout_MSSP_weighted{
     $action
     if(PyErr_Occurred()) SWIG_fail;
 }
@@ -110,5 +117,11 @@ extern void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J
         weighted_edge_check(len_I, len_J, len_V);
         pivot_check(k, n);
         sparse_layout_naive_weighted(n, X, len_I, I, J, V, data, k, t_max, eps);
+    }
+    void np_sparse_layout_MSSP_weighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J, double *V, int len_V, char *data, int size, int k, int t_max, double eps){
+        dimension_check(kd);
+        weighted_edge_check(len_I, len_J, len_V);
+        pivot_check(k, n);
+        sparse_layout_MSSP_weightd(n, X, len_I, I, J, V, data, k, t_max, eps);
     }
 %}

@@ -131,6 +131,10 @@ sparse_layout_MSSP_unweightd = _sparse_layout.sparse_layout_MSSP_unweightd
 def sparse_layout_naive_weighted(*args):
     return _sparse_layout.sparse_layout_naive_weighted(*args)
 sparse_layout_naive_weighted = _sparse_layout.sparse_layout_naive_weighted
+
+def sparse_layout_MSSP_weightd(*args):
+    return _sparse_layout.sparse_layout_MSSP_weightd(*args)
+sparse_layout_MSSP_weightd = _sparse_layout.sparse_layout_MSSP_weightd
 # This file is compatible with both classic and new-style classes.
 
 

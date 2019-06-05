@@ -96,6 +96,7 @@ void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, int t_m
 void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
 void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
 void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
+void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
 
 std::vector<std::vector<int>> buildGraphUnweighted(int n, int m, int *I, int *J)
 {
@@ -927,12 +928,14 @@ void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<double>
 
 void sgd(double *X, std::vector<term> &terms, const std::vector<double> &etas)
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
     // iterate through step sizes
     int iteration = 0;
     for (double eta : etas)
     {
         // shuffle terms
-        std::random_shuffle(terms.begin(), terms.end());
+        std::shuffle(terms.begin(), terms.end(), g);
 
         for (const term &t : terms)
         {
@@ -962,7 +965,7 @@ void sgd(double *X, std::vector<term> &terms, const std::vector<double> &etas)
 
 std::vector<double> schedule(const std::vector<term> &terms, int tMax, double eps)
 {
-    double wMin = std::numeric_limits<double>::max(), wMax = 0;
+    double wMin = std::numeric_limits<double>::max(), wMax = 0.0;
     for (int i = 0; i < terms.size(); i++)
     {
         double wij = terms[i].wij;
@@ -1317,7 +1320,6 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
     try
     {
         std::vector<int> pivots;
-        randomPivots(n, k, pivots);
         auto graph = buildGraphUnweighted(n, m, I, J);
         switch (hashSamplingScheme(sampling_scheme))
         {
@@ -1772,6 +1774,279 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
             {
                 std::tuple<int, int> key = std::make_tuple(i, j);
                 double v = V[ij];
+                double w = (double)1 / v * v;
+                term t = {i, j, v, w, w};
+                terms[key] = t;
+            }
+        }
+
+        std::vector<term> terms_vec;
+        for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
+        {
+            terms_vec.push_back(it->second);
+        }
+
+        std::vector<double> etas = schedule(terms_vec, t_max, eps);
+        sgd(X, terms_vec, etas);
+    }
+    catch (const char *msg)
+    {
+        std::cerr << "Error: " << msg << std::endl;
+    }
+}
+
+typedef std::pair<double, int> dist_pivot;
+typedef std::pair<double, std::tuple<int, int>> dist_target;
+void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps)
+{
+    try
+    {
+        std::vector<int> pivots;
+        auto graph = buildGraphWeighted(n, m, I, J, V);
+        switch (hashSamplingScheme(sampling_scheme))
+        {
+        case erandom:
+        {
+            randomPivots(n, k, pivots);
+            break;
+        }
+        // case emisFiltration:
+        // {
+        //     misFitration(n, m, k, pivots, I, J);
+        //     break;
+        // }
+        // case emaxMinEuc:
+        // {
+        //     maxMinEuclidean(n, m, k, pivots, I, J);
+        //     break;
+        // }
+        // case emaxMinSP:
+        // {
+        //     maxMinSP(n, m, k, pivots, I, J);
+        //     break;
+        // }
+        // case emaxMinRandomSP:
+        // {
+        //     maxMinRandomSP(n, m, k, pivots, I, J);
+        //     break;
+        // }
+        default:
+            // maxMinRandomSP(n, m, k, pivots, I, J);
+            break;
+        }
+
+        std::map<std::tuple<int, int>, term> terms;
+
+        // MSSP
+        std::map<int, int> s;
+        std::vector<bool> markForRegion(n, false);
+        std::map<int, std::vector<bool>> markForWeights;
+        std::map<int, std::vector<double>> distToPivot;
+        std::map<int, std::vector<int>> regions;
+        std::vector<int> regionAssignment(n, -1);
+        std::priority_queue<dist_pivot, std::vector<dist_pivot>, std::greater<dist_pivot>> q1;
+        // std::queue<int> q1;
+        std::map<int, std::queue<int>> q2;
+        std::priority_queue<dist_target, std::vector<dist_target>, std::greater<dist_target>> q3;
+        // std::queue<std::tuple<int, int>> q3;
+
+        std::map<int, double> dist;
+        std::map<int, double> prevDist;
+
+        for (int p : pivots)
+        {
+            regions[p] = std::vector<int>{p};
+            regionAssignment[p] = p;
+            q1.push(std::make_pair(0, p));
+            q2[p] = std::queue<int>();
+            q2[p].push(p);
+            markForRegion[p] = true;
+            markForWeights[p] = std::vector<bool>(n, false);
+            markForWeights[p][p] = true;
+            distToPivot[p] = std::vector<double>(n, 0.0);
+            s[p] = 1;
+            dist[p] = 0.0;
+            prevDist[p] = 0.0;
+        }
+
+        while (!q1.empty())
+        {
+            std::pair<double, int> dist_index = q1.top();
+            int index = std::get<1>(dist_index);
+            double curDist = std::get<0>(dist_index);
+            q1.pop();
+            int pivot_index = regionAssignment[index];
+            // double curLevel = level[pivot_index][index];
+
+            if (curDist > dist[pivot_index])
+                dist[pivot_index] = curDist;
+
+            if (dist[pivot_index] >= (2 * prevDist[pivot_index]))
+            {
+                while (!q2[pivot_index].empty())
+                {
+                    int regionalIndex = q2[pivot_index].front();
+                    if (distToPivot[pivot_index][regionalIndex] <= prevDist[pivot_index])
+                    {
+                        s[pivot_index]++;
+                        q2[pivot_index].pop();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                prevDist[pivot_index] = dist[pivot_index];
+            }
+
+            if (pivot_index != index)
+            {
+                bool isNeighbour = false;
+                for (edge e : graph[pivot_index])
+                {
+                    if (e.target == index)
+                    {
+                        isNeighbour = true;
+                    }
+                }
+
+                if (!isNeighbour)
+                {
+                    double w = (double)s[pivot_index] / (distToPivot[pivot_index][index] * distToPivot[pivot_index][index]);
+                    if (pivot_index < index)
+                    {
+                        std::tuple<int, int> pi = std::make_tuple(pivot_index, index);
+                        if (terms.find(pi) == terms.end())
+                        {
+                            term t = {pivot_index, index, distToPivot[pivot_index][index], w, 0};
+                            terms[pi] = t;
+                        }
+                        else
+                        {
+                            terms[pi].wji = w;
+                        }
+                    }
+                    else
+                    {
+                        std::tuple<int, int> ip = std::make_tuple(index, pivot_index);
+                        if (terms.find(ip) == terms.end())
+                        {
+                            term t = {index, pivot_index, distToPivot[pivot_index][index], w, 0};
+                            terms[ip] = t;
+                        }
+                        else
+                        {
+                            terms[ip].wji = w;
+                        }
+                    }
+                }
+            }
+
+            for (edge e : graph[index])
+            {
+                int neighbour = e.target;
+                double d = e.weight;
+                if (!markForRegion[neighbour])
+                {
+                    markForRegion[neighbour] = true;
+                    markForWeights[pivot_index][neighbour] = true;
+                    distToPivot[pivot_index][neighbour] = curDist + d;
+                    q1.push(std::make_pair(curDist + d, neighbour));
+                    regionAssignment[neighbour] = pivot_index;
+                    regions[pivot_index].push_back(neighbour);
+                    q2[pivot_index].push(neighbour);
+                }
+                if (!markForWeights[pivot_index][neighbour])
+                {
+                    markForWeights[pivot_index][neighbour] = true;
+                    distToPivot[pivot_index][neighbour] = curDist + d;
+                    q3.push(std::make_pair(curDist + d, std::tuple<int, int>(neighbour, pivot_index)));
+                }
+            }
+        }
+
+        while (!q3.empty())
+        {
+            std::pair<double, std::tuple<int, int>> dist_index_pivot = q3.top();
+            int index = std::get<0>(std::get<1>(dist_index_pivot));
+            int pivot_index = std::get<1>(std::get<1>(dist_index_pivot));
+            double curDist = std::get<0>(dist_index_pivot);
+            q3.pop();
+            // int curLevel = level[pivot_index][index];
+
+            if (curDist > dist[pivot_index])
+                dist[pivot_index] = curDist;
+
+            if (dist[pivot_index] >= 2 * prevDist[pivot_index])
+            {
+                while (!q2[pivot_index].empty())
+                {
+                    int regionalIndex = q2[pivot_index].front();
+                    if (distToPivot[pivot_index][regionalIndex] <= prevDist[pivot_index])
+                    {
+                        s[pivot_index]++;
+                        q2[pivot_index].pop();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                prevDist[pivot_index] = dist[pivot_index];
+            }
+
+            double w = (double)s[pivot_index] / (distToPivot[pivot_index][index] * distToPivot[pivot_index][index]);
+
+            if (pivot_index < index)
+            {
+                std::tuple<int, int> pi = std::make_tuple(pivot_index, index);
+                if (terms.find(pi) == terms.end())
+                {
+                    term t = {pivot_index, index, distToPivot[pivot_index][index], w, 0};
+                    terms[pi] = t;
+                }
+                else
+                {
+                    terms[pi].wji = w;
+                }
+            }
+            else
+            {
+                std::tuple<int, int> ip = std::make_tuple(index, pivot_index);
+                if (terms.find(ip) == terms.end())
+                {
+                    term t = {index, pivot_index, distToPivot[pivot_index][index], w, 0};
+                    terms[ip] = t;
+                }
+                else
+                {
+                    terms[ip].wji = w;
+                }
+            }
+
+            for (edge e : graph[index])
+            {
+                int neighbour = e.target;
+                double d = e.weight;
+                if (!markForWeights[pivot_index][neighbour])
+                {
+                    markForWeights[pivot_index][neighbour] = true;
+                    distToPivot[pivot_index][neighbour] = curDist + d;
+                    q3.push(std::make_pair(curDist + d, std::tuple<int, int>(neighbour, pivot_index)));
+                }
+            }
+        }
+        // Find all avaliable terms in graph
+        for (int ij = 0; ij < m; ij++)
+        {
+            int i = I[ij];
+            int j = J[ij];
+            if (i < j)
+            {
+                double v = V[ij];
+                std::tuple<int, int> key = std::make_tuple(i, j);
                 double w = 1 / v * v;
                 term t = {i, j, v, w, w};
                 terms[key] = t;
