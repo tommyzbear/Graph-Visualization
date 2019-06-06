@@ -79,6 +79,7 @@ void maxMinSP(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *
 void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J);
 void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<double>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J, double *V);
 void maxMinRandomSP(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J);
+void maxMinRandomSP(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J, double *V);
 // std::vector<int> kMeansLayout(int n, int nPivots, int *I, int *J, double *V);
 
 template <typename T>
