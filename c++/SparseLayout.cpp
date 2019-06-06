@@ -75,6 +75,7 @@ void maxMinEuclidean(int n, int m, int nPivots, std::vector<int> &pivots, int *I
 void maxMinSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J);
 void maxMinSP(int n, int m, int nPivots, std::map<int, std::vector<double>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J, double *V);
 void maxMinSP(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J);
+void maxMinSP(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J, double *V);
 void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J);
 void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<double>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J, double *V);
 void maxMinRandomSP(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J);
@@ -414,7 +415,7 @@ void randomPivots(int n, int nPivots, std::vector<int> &pivots)
     {
         int p = rand() % n;
         pivots.push_back(p);
-        std::cerr << "pivot no." << i << " is " << p << std::endl;
+        // std::cerr << "pivot no." << i << " is " << p << std::endl;
     }
 }
 
@@ -747,6 +748,50 @@ void maxMinSP(int n, int m, int nPivots, std::map<int, std::vector<double>> &sho
     }
 }
 
+void maxMinSP(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J, double *V)
+{
+    std::srand(time(0));
+
+    int p0 = rand() % n;
+
+    pivots.push_back(p0);
+
+    std::vector<std::tuple<double, int>> mins(n);
+
+    std::map<int, std::vector<double>> shortestPaths;
+
+    shortestPaths[p0] = dijkstra(n, m, p0, I, J, V);
+
+    for (int i = 0; i < n; i++)
+    {
+        mins[i] = {shortestPaths[p0][i], p0};
+    }
+
+    for (int i = 1; i < nPivots; i++)
+    {
+        int argMax = 0;
+        for (int k = 1; k < n; k++)
+        {
+            if (std::get<0>(mins[k]) > std::get<0>(mins[argMax]))
+            {
+                argMax = k;
+            }
+        }
+
+        shortestPaths[argMax] = dijkstra(n, m, argMax, I, J, V);
+        pivots.push_back(argMax);
+
+        for (int j = 0; j < n; j++)
+        {
+            double temp = shortestPaths[argMax][j];
+            if (temp < std::get<0>(mins[j]))
+            {
+                mins[j] = {temp, argMax};
+            }
+        }
+    }
+}
+
 void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &shortestPaths, std::vector<int> &pivots, std::map<int, std::vector<int>> &regions, int *I, int *J)
 {
     std::srand(time(0));
@@ -923,6 +968,60 @@ void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<double>
     {
         int closestPivot = std::get<1>(mins[i]);
         regions[closestPivot].push_back(i);
+    }
+}
+
+void maxMinRandomSP(int n, int m, int nPivots, std::vector<int> &pivots, int *I, int *J, double *V)
+{
+    std::srand(time(0));
+    std::default_random_engine generator;
+
+    int p0 = rand() % n;
+
+    pivots.push_back(p0);
+
+    std::map<int, std::vector<double>> shortestPaths;
+
+    shortestPaths[p0] = dijkstra(n, m, p0, I, J, V);
+
+    std::vector<std::tuple<double, int>> mins;
+    for (int i = 0; i < n; i++)
+    {
+        mins.push_back({shortestPaths[p0][i], p0});
+    }
+
+    for (int i = 1; i < nPivots; i++)
+    {
+        double totalProb = 0;
+        std::vector<double> cumulativeProb = {};
+        for (int j = 0; j < n; j++)
+        {
+            totalProb += std::get<0>(mins[j]);
+            cumulativeProb.push_back(totalProb);
+        }
+
+        std::uniform_real_distribution<double> distribution(0.0, totalProb);
+        double sample = distribution(generator);
+
+        for (int j = 0; j < n; j++)
+        {
+            if (sample < cumulativeProb[j])
+            {
+                pivots.push_back(j);
+                break;
+            }
+        }
+
+        shortestPaths[pivots[i]] = dijkstra(n, m, pivots[i], I, J, V);
+
+        for (int j = 0; j < n; j++)
+        {
+            double temp = shortestPaths[pivots[i]][j];
+            if (temp < std::get<0>(mins[j]))
+            {
+                mins[j] = {temp, pivots[i]};
+            }
+        }
     }
 }
 
@@ -1810,28 +1909,28 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
             randomPivots(n, k, pivots);
             break;
         }
-        // case emisFiltration:
-        // {
-        //     misFitration(n, m, k, pivots, I, J);
-        //     break;
-        // }
-        // case emaxMinEuc:
-        // {
-        //     maxMinEuclidean(n, m, k, pivots, I, J);
-        //     break;
-        // }
-        // case emaxMinSP:
-        // {
-        //     maxMinSP(n, m, k, pivots, I, J);
-        //     break;
-        // }
-        // case emaxMinRandomSP:
-        // {
-        //     maxMinRandomSP(n, m, k, pivots, I, J);
-        //     break;
-        // }
+        case emisFiltration:
+        {
+            misFitration(n, m, k, pivots, I, J);
+            break;
+        }
+        case emaxMinEuc:
+        {
+            maxMinEuclidean(n, m, k, pivots, I, J, V);
+            break;
+        }
+        case emaxMinSP:
+        {
+            maxMinSP(n, m, k, pivots, I, J, V);
+            break;
+        }
+        case emaxMinRandomSP:
+        {
+            maxMinRandomSP(n, m, k, pivots, I, J, V);
+            break;
+        }
         default:
-            // maxMinRandomSP(n, m, k, pivots, I, J);
+            maxMinRandomSP(n, m, k, pivots, I, J, V);
             break;
         }
 
