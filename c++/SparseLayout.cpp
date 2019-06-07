@@ -1945,19 +1945,16 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
         std::map<int, std::vector<int>> regions;
         std::vector<int> regionAssignment(n, -1);
         std::priority_queue<dist_pivot, std::vector<dist_pivot>, std::greater<dist_pivot>> q1;
-        // std::queue<int> q1;
         std::map<int, std::queue<int>> q2;
         std::priority_queue<dist_target, std::vector<dist_target>, std::greater<dist_target>> q3;
-        // std::queue<std::tuple<int, int>> q3;
 
-        std::map<int, double> dist;
         std::map<int, double> prevDist;
 
         for (int p : pivots)
         {
             regions[p] = std::vector<int>{p};
             regionAssignment[p] = p;
-            q1.push(std::make_pair(0, p));
+            q1.push(std::make_pair(0.0, p));
             q2[p] = std::queue<int>();
             q2[p].push(p);
             markForRegion[p] = true;
@@ -1965,7 +1962,6 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
             markForWeights[p][p] = true;
             distToPivot[p] = std::vector<double>(n, 0.0);
             s[p] = 1;
-            dist[p] = 0.0;
             prevDist[p] = 0.0;
         }
 
@@ -1976,12 +1972,8 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
             double curDist = std::get<0>(dist_index);
             q1.pop();
             int pivot_index = regionAssignment[index];
-            // double curLevel = level[pivot_index][index];
 
-            if (curDist > dist[pivot_index])
-                dist[pivot_index] = curDist;
-
-            if (dist[pivot_index] >= (2 * prevDist[pivot_index]))
+            if (curDist >= (2 * prevDist[pivot_index]))
             {
                 while (!q2[pivot_index].empty())
                 {
@@ -1997,7 +1989,7 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
                     }
                 }
 
-                prevDist[pivot_index] = dist[pivot_index];
+                prevDist[pivot_index] = curDist;
             }
 
             if (pivot_index != index)
@@ -2013,13 +2005,13 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
 
                 if (!isNeighbour)
                 {
-                    double w = (double)s[pivot_index] / (distToPivot[pivot_index][index] * distToPivot[pivot_index][index]);
+                    double w = (double)s[pivot_index] / (curDist * curDist);
                     if (pivot_index < index)
                     {
                         std::tuple<int, int> pi = std::make_tuple(pivot_index, index);
                         if (terms.find(pi) == terms.end())
                         {
-                            term t = {pivot_index, index, distToPivot[pivot_index][index], w, 0};
+                            term t = {pivot_index, index, curDist, w, 0};
                             terms[pi] = t;
                         }
                         else
@@ -2032,7 +2024,7 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
                         std::tuple<int, int> ip = std::make_tuple(index, pivot_index);
                         if (terms.find(ip) == terms.end())
                         {
-                            term t = {index, pivot_index, distToPivot[pivot_index][index], w, 0};
+                            term t = {index, pivot_index, curDist, w, 0};
                             terms[ip] = t;
                         }
                         else
@@ -2073,12 +2065,8 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
             int pivot_index = std::get<1>(std::get<1>(dist_index_pivot));
             double curDist = std::get<0>(dist_index_pivot);
             q3.pop();
-            // int curLevel = level[pivot_index][index];
 
-            if (curDist > dist[pivot_index])
-                dist[pivot_index] = curDist;
-
-            if (dist[pivot_index] >= 2 * prevDist[pivot_index])
+            if (curDist >= 2 * prevDist[pivot_index])
             {
                 while (!q2[pivot_index].empty())
                 {
@@ -2094,17 +2082,17 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
                     }
                 }
 
-                prevDist[pivot_index] = dist[pivot_index];
+                prevDist[pivot_index] = curDist;
             }
 
-            double w = (double)s[pivot_index] / (distToPivot[pivot_index][index] * distToPivot[pivot_index][index]);
+            double w = (double)s[pivot_index] / (curDist * curDist);
 
             if (pivot_index < index)
             {
                 std::tuple<int, int> pi = std::make_tuple(pivot_index, index);
                 if (terms.find(pi) == terms.end())
                 {
-                    term t = {pivot_index, index, distToPivot[pivot_index][index], w, 0};
+                    term t = {pivot_index, index, curDist, w, 0};
                     terms[pi] = t;
                 }
                 else
@@ -2117,7 +2105,7 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
                 std::tuple<int, int> ip = std::make_tuple(index, pivot_index);
                 if (terms.find(ip) == terms.end())
                 {
-                    term t = {index, pivot_index, distToPivot[pivot_index][index], w, 0};
+                    term t = {index, pivot_index, curDist, w, 0};
                     terms[ip] = t;
                 }
                 else
