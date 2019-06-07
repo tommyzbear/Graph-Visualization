@@ -1895,7 +1895,7 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
     }
 }
 
-typedef std::pair<double, int> dist_pivot;
+// typedef std::pair<double, int> dist_pivot;
 typedef std::pair<double, std::tuple<int, int>> dist_target;
 void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps)
 {
@@ -1942,9 +1942,7 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
         std::vector<bool> markForRegion(n, false);
         std::map<int, std::vector<bool>> markForWeights;
         std::map<int, std::vector<double>> distToPivot;
-        std::map<int, std::vector<int>> regions;
-        std::vector<int> regionAssignment(n, -1);
-        std::priority_queue<dist_pivot, std::vector<dist_pivot>, std::greater<dist_pivot>> q1;
+        // std::map<int, std::vector<int>> regions;
         std::map<int, std::queue<int>> q2;
         std::priority_queue<dist_target, std::vector<dist_target>, std::greater<dist_target>> q3;
 
@@ -1952,9 +1950,8 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
 
         for (int p : pivots)
         {
-            regions[p] = std::vector<int>{p};
-            regionAssignment[p] = p;
-            q1.push(std::make_pair(0.0, p));
+            // regions[p] = std::vector<int>{p};
+            q3.push(std::make_pair(0.0, std::tuple<int, int>(p, p)));
             q2[p] = std::queue<int>();
             q2[p].push(p);
             markForRegion[p] = true;
@@ -1965,13 +1962,14 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
             prevDist[p] = 0.0;
         }
 
-        while (!q1.empty())
+        while (!q3.empty())
         {
-            std::pair<double, int> dist_index = q1.top();
-            int index = std::get<1>(dist_index);
-            double curDist = std::get<0>(dist_index);
-            q1.pop();
-            int pivot_index = regionAssignment[index];
+            std::pair<double, std::tuple<int, int>> dist_index_pivot = q3.top();
+            int index = std::get<0>(std::get<1>(dist_index_pivot));
+            int pivot_index = std::get<1>(std::get<1>(dist_index_pivot));
+            double curDist = std::get<0>(dist_index_pivot);
+            q3.pop();
+            // int pivot_index = regionAssignment[index];
 
             if (curDist >= (2 * prevDist[pivot_index]))
             {
@@ -2044,9 +2042,8 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
                     markForRegion[neighbour] = true;
                     markForWeights[pivot_index][neighbour] = true;
                     distToPivot[pivot_index][neighbour] = curDist + d;
-                    q1.push(std::make_pair(curDist + d, neighbour));
-                    regionAssignment[neighbour] = pivot_index;
-                    regions[pivot_index].push_back(neighbour);
+                    q3.push(std::make_pair(curDist + d, std::tuple<int, int>(neighbour, pivot_index)));
+                    // regions[pivot_index].push_back(neighbour);
                     q2[pivot_index].push(neighbour);
                 }
                 if (!markForWeights[pivot_index][neighbour])
@@ -2058,74 +2055,6 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
             }
         }
 
-        while (!q3.empty())
-        {
-            std::pair<double, std::tuple<int, int>> dist_index_pivot = q3.top();
-            int index = std::get<0>(std::get<1>(dist_index_pivot));
-            int pivot_index = std::get<1>(std::get<1>(dist_index_pivot));
-            double curDist = std::get<0>(dist_index_pivot);
-            q3.pop();
-
-            if (curDist >= 2 * prevDist[pivot_index])
-            {
-                while (!q2[pivot_index].empty())
-                {
-                    int regionalIndex = q2[pivot_index].front();
-                    if (distToPivot[pivot_index][regionalIndex] <= prevDist[pivot_index])
-                    {
-                        s[pivot_index]++;
-                        q2[pivot_index].pop();
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                prevDist[pivot_index] = curDist;
-            }
-
-            double w = (double)s[pivot_index] / (curDist * curDist);
-
-            if (pivot_index < index)
-            {
-                std::tuple<int, int> pi = std::make_tuple(pivot_index, index);
-                if (terms.find(pi) == terms.end())
-                {
-                    term t = {pivot_index, index, curDist, w, 0};
-                    terms[pi] = t;
-                }
-                else
-                {
-                    terms[pi].wji = w;
-                }
-            }
-            else
-            {
-                std::tuple<int, int> ip = std::make_tuple(index, pivot_index);
-                if (terms.find(ip) == terms.end())
-                {
-                    term t = {index, pivot_index, curDist, w, 0};
-                    terms[ip] = t;
-                }
-                else
-                {
-                    terms[ip].wji = w;
-                }
-            }
-
-            for (edge e : graph[index])
-            {
-                int neighbour = e.target;
-                double d = e.weight;
-                if (!markForWeights[pivot_index][neighbour])
-                {
-                    markForWeights[pivot_index][neighbour] = true;
-                    distToPivot[pivot_index][neighbour] = curDist + d;
-                    q3.push(std::make_pair(curDist + d, std::tuple<int, int>(neighbour, pivot_index)));
-                }
-            }
-        }
         // Find all avaliable terms in graph
         for (int ij = 0; ij < m; ij++)
         {

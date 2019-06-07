@@ -10,7 +10,7 @@ import scipy.sparse.csgraph as cs
 graph_name = 'commanche_weighted'
 mat_data = io.loadmat(graph_name + '.mat')
 graph = mat_data['graph']
-# graph_name = 'dwt_1005'
+# graph_name = 'dwt_2680'
 # mat_data = io.loadmat(graph_name + '.mat')
 # graph = mat_data['Problem']['A'][0][0]
 
@@ -23,12 +23,13 @@ n = max(max(I), max(J)) + 1
 X = np.random.rand(n, 2)
 
 start_time = time.time()
+
+# cpp.sparse_layout_naive_unweighted(X, I, J, "max_min_random_sp", 200, 20, 0.1)
 # cpp.sparse_layout_MSSP_unweightd(X, I, J, "max_min_random_sp", 200, 20, 0.1)
-# cpp.sparse_layout_naive_unweighted(X, I, J, "max_min_random_sp", 200, 15, 0.1)
-# cpp.layout_unweighted(X, I, J, 15, 0.1)
+# cpp.layout_unweighted(X, I, J, 20, 0.1)
 # cpp.layout_weighted(X, I, J, V, 20, 0.1)
 # cpp.sparse_layout_naive_weighted(X, I, J, V, "max_min_random_sp", 700, 20, 0.1)
-cpp.sparse_layout_MSSP_weightd(X, I, J, V, "random", 200, 20, 0.1)
+cpp.sparse_layout_MSSP_weightd(X, I, J, V, "max_min_random_sp", 700, 20, 0.1)
 end_time = time.time()
 
 print("Computation time: %.2f" % (end_time - start_time))
