@@ -1434,7 +1434,7 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
     try
     {
         std::cerr << "Using Multi-Source Sparse Stress Layout for unweighted graph" << std::endl;
-
+	std::clock_t programStart = std::clock();
         std::vector<int> pivots;
         auto graph = buildGraphUnweighted(n, m, I, J);
         std::clock_t tStart = std::clock();
@@ -1654,7 +1654,7 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
         }
 
         printf("Time taken to compute adapted weights: %.2fs\n", (double)(std::clock() - tStart) / CLOCKS_PER_SEC);
-
+	tStart = std::clock();
         // Find all avaliable terms in graph
         for (int ij = 0; ij < m; ij++)
         {
@@ -1667,7 +1667,7 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
                 terms[key] = t;
             }
         }
-
+	std::cerr << "Time taken to compute edges: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
         std::vector<term> terms_vec;
         for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
         {
@@ -1675,9 +1675,12 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
         }
 
         std::cerr << "Total number of terms found: " << terms_vec.size() << std::endl;
-
+	
+	tStart = std::clock();
         std::vector<double> etas = schedule(terms_vec, t_max, eps);
         sgd(X, terms_vec, etas);
+	std::cerr << "SGD computation time: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
+	std::cerr << "Total processing time: " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << std::endl;
     }
     catch (const char *msg)
     {
