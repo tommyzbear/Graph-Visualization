@@ -2139,7 +2139,6 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
         std::cerr << "Error: " << msg << std::endl;
     }
 }
-<<<<<<< HEAD
 
 void stress_unweighted(int n, double *X, int m, int *I, int *J)
 {
@@ -2184,5 +2183,3 @@ void stress_weighted(int n, double *X, int m, int *I, int *J, double *V)
 
     std::cerr << "Stress: " << stress << std::endl;
 }
-=======
->>>>>>> 75f123e6081f2d14163a07410758891fe5669095
