@@ -2,7 +2,7 @@
 
 # System imports
 from distutils.core import *
-from distutils      import sysconfig
+from distutils import sysconfig
 
 # Third-party modules - we depend on numpy for everything
 import numpy
@@ -13,17 +13,19 @@ try:
 except AttributeError:
     numpy_include = numpy.get_numpy_include()
 
-# ezrange extension module
+# sparse layout extension module
 _sparse_layout = Extension(
     name="_sparse_layout",
-    sources=["SparseLayout_wrap.cxx","SparseLayout.cpp"],
-                   include_dirs = [numpy_include],
-                   )
+    sources=["SparseLayout_wrap.cxx", "SparseLayout.cpp"],
+    libraries=['tbb'],
+    # extra_compile_args=["-O3"],
+    include_dirs=[numpy_include],
+)
 
-# ezrange setup
-setup(  name        = "range function",
-        description = "range takes an integer and returns an n element int array where each element is equal to its index",
-        author      = "Egor Zindy",
-        version     = "1.0",
-        ext_modules = [_sparse_layout]
-        )
+# sparse layout setup
+setup(name="Sparse Layout",
+      description="Input takes in a random 2D arrays and Sparse matrix contain entries of edges, then return a graph layout in 2D space",
+      author="Heran Zhang",
+      version="1.0",
+      ext_modules=[_sparse_layout]
+      )

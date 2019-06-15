@@ -100,6 +100,10 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
 void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
 void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
 
+// Stress level calculation
+void stress_unweighted(int n, double *X, int m, int *I, int *J);
+void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
+
 std::vector<std::vector<int>> buildGraphUnweighted(int n, int m, int *I, int *J)
 {
     // used to make graph undirected, in case it is not already
@@ -290,7 +294,6 @@ std::vector<int> bfs(int n, int m, int source, int *I, int *J)
             }
         }
     }
-
     return d;
 }
 
@@ -831,7 +834,6 @@ void maxMinRandomSP(int n, int m, int nPivots, std::map<int, std::vector<int>> &
                 break;
             }
         }
-
         shortestPaths[pivots[i]] = bfs(n, m, pivots[i], I, J);
 
         for (int j = 0; j < n; j++)
@@ -1352,12 +1354,7 @@ void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, cha
                             s++;
                         }
                     }
-                    // if (s == 0)
-                    // {
-                    //     std::cerr << "pivot = " << p << ", i = " << i << std::endl;
-                    //     throw "s equals to 0";
-                    // }
-                    // std::cerr << p << " " << i << " s = " << s << std::endl;
+
                     double w = (double)s / (shortestPaths[p][i] * shortestPaths[p][i]);
 
                     // keep the key value i < j for convinience
@@ -1394,34 +1391,34 @@ void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, cha
         printf("Time taken to calculate adapted weights: %.2fs\n", Naive_time);
 
         std::ofstream file;
-        file.open("Naive_time.txt", std::fstream::in | std::fstream::out | std::fstream::app);
-        file << "Number of Pivots: " << k << ", Adapted weight calculation time: " << Naive_time << "s, ";
-        file << "Number of terms found: " << terms.size() << "\n";
-        file.close();
+        // file.open("Naive_time.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+        // file << "Number of Pivots: " << k << ", Adapted weight calculation time: " << Naive_time << "s, ";
+        // file << "Number of terms found: " << terms.size() << "\n";
+        // file.close();
 
         // Find all avaliable terms in graph
-        // for (int ij = 0; ij < m; ij++)
-        // {
-        //     int i = I[ij];
-        //     int j = J[ij];
-        //     if (i < j)
-        //     {
-        //         std::tuple<int, int> key = std::make_tuple(i, j);
-        //         term t = {i, j, 1.0, 1.0, 1.0};
-        //         terms[key] = t;
-        //     }
-        // }
+        for (int ij = 0; ij < m; ij++)
+        {
+            int i = I[ij];
+            int j = J[ij];
+            if (i < j)
+            {
+                std::tuple<int, int> key = std::make_tuple(i, j);
+                term t = {i, j, 1.0, 1.0, 1.0};
+                terms[key] = t;
+            }
+        }
 
-        // std::vector<term> terms_vec;
-        // for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
-        // {
-        //     terms_vec.push_back(it->second);
-        // }
+        std::vector<term> terms_vec;
+        for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
+        {
+            terms_vec.push_back(it->second);
+        }
 
-        // std::cerr << "Total number of terms found: " << terms_vec.size() << std::endl;
+        std::cerr << "Total number of terms found: " << terms_vec.size() << std::endl;
 
-        // std::vector<double> etas = schedule(terms_vec, t_max, eps);
-        // sgd(X, terms_vec, etas);
+        std::vector<double> etas = schedule(terms_vec, t_max, eps);
+        sgd(X, terms_vec, etas);
     }
     catch (const char *msg)
     {
@@ -2138,4 +2135,48 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
     {
         std::cerr << "Error: " << msg << std::endl;
     }
+}
+
+void stress_unweighted(int n, double *X, int m, int *I, int *J)
+{
+    double stress = 0.0;
+    std::vector<std::vector<int>> shortest_paths(n);
+    for (int i = 0; i < n; i++)
+    {
+        shortest_paths[i] = bfs(n, m, i, I, J);
+    }
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < i; j++)
+        {
+            double dx = X[i * 2] - X[j * 2], dy = X[i * 2 + 1] - X[j * 2 + 1];
+            double mag = sqrt(dx * dx + dy * dy);
+            double diff = shortest_paths[i][j] - mag;
+            stress += (diff * diff) / (shortest_paths[i][j] * shortest_paths[i][j]);
+        }
+    }
+
+    std::cerr << "Stress: " << stress << std::endl;
+}
+
+void stress_weighted(int n, double *X, int m, int *I, int *J, double *V)
+{
+    double stress = 0.0;
+    std::vector<std::vector<double>> shortest_paths(n);
+    for (int i = 0; i < n; i++)
+    {
+        shortest_paths[i] = dijkstra(n, m, i, I, J, V);
+    }
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < i; j++)
+        {
+            double dx = X[i * 2] - X[j * 2], dy = X[i * 2 + 1] - X[j * 2 + 1];
+            double mag = sqrt(dx * dx + dy * dy);
+            double diff = shortest_paths[i][j] - mag;
+            stress += (diff * diff) / (shortest_paths[i][j] * shortest_paths[i][j]);
+        }
+    }
+
+    std::cerr << "Stress: " << stress << std::endl;
 }

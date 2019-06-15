@@ -3119,6 +3119,8 @@ namespace swig {
     extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
     extern void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
     extern void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
+    extern void stress_unweighted(int n, double *X, int m, int *I, int *J);
+    extern void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
 
 
 #ifndef SWIG_FILE_WITH_INIT
@@ -3467,6 +3469,12 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
         weighted_edge_check(len_I, len_J, len_V);
         pivot_check(k, n);
         sparse_layout_MSSP_weightd(n, X, len_I, I, J, V, data, k, t_max, eps);
+    }
+    void np_stress_unweighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J){
+        stress_unweighted(n, X, len_I, I, J);
+    }
+    void np_stress_weighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J, double *V, int len_V){
+        stress_weighted(n, X, len_I, I, J, V);
     }
 
 
@@ -4507,6 +4515,129 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd__SWIG_0(PyObject *SWIGUNUS
   return resultobj;
 fail:
   if (alloc7 == SWIG_NEWOBJ) delete[] buf7;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_stress_unweighted__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  double *arg2 = (double *) 0 ;
+  int arg3 ;
+  int *arg4 = (int *) 0 ;
+  int *arg5 = (int *) 0 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:stress_unweighted",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "stress_unweighted" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_double, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "stress_unweighted" "', argument " "2"" of type '" "double *""'"); 
+  }
+  arg2 = reinterpret_cast< double * >(argp2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "stress_unweighted" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4,SWIGTYPE_p_int, 0 |  0 );
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "stress_unweighted" "', argument " "4"" of type '" "int *""'"); 
+  }
+  arg4 = reinterpret_cast< int * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_int, 0 |  0 );
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "stress_unweighted" "', argument " "5"" of type '" "int *""'"); 
+  }
+  arg5 = reinterpret_cast< int * >(argp5);
+  stress_unweighted(arg1,arg2,arg3,arg4,arg5);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_stress_weighted__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  double *arg2 = (double *) 0 ;
+  int arg3 ;
+  int *arg4 = (int *) 0 ;
+  int *arg5 = (int *) 0 ;
+  double *arg6 = (double *) 0 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:stress_weighted",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "stress_weighted" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_double, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "stress_weighted" "', argument " "2"" of type '" "double *""'"); 
+  }
+  arg2 = reinterpret_cast< double * >(argp2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "stress_weighted" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4,SWIGTYPE_p_int, 0 |  0 );
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "stress_weighted" "', argument " "4"" of type '" "int *""'"); 
+  }
+  arg4 = reinterpret_cast< int * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_int, 0 |  0 );
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "stress_weighted" "', argument " "5"" of type '" "int *""'"); 
+  }
+  arg5 = reinterpret_cast< int * >(argp5);
+  res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_double, 0 |  0 );
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "stress_weighted" "', argument " "6"" of type '" "double *""'"); 
+  }
+  arg6 = reinterpret_cast< double * >(argp6);
+  stress_weighted(arg1,arg2,arg3,arg4,arg5,arg6);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
   return NULL;
 }
 
@@ -6130,6 +6261,369 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_stress_unweighted__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 = (double *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  int *arg4 = (int *) 0 ;
+  int arg5 ;
+  int *arg6 = (int *) 0 ;
+  int arg7 ;
+  PyArrayObject *array1 = NULL ;
+  PyArrayObject *array4 = NULL ;
+  int is_new_object4 = 0 ;
+  PyArrayObject *array6 = NULL ;
+  int is_new_object6 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:stress_unweighted",&obj0,&obj1,&obj2)) SWIG_fail;
+  {
+    array1 = obj_to_array_no_conversion(obj0, NPY_DOUBLE);
+    if (!array1 || !require_dimensions(array1,2) || !require_contiguous(array1)
+      || !require_native(array1)) SWIG_fail;
+    arg1 = (double*) array_data(array1);
+    arg2 = (int) array_size(array1,0);
+    arg3 = (int) array_size(array1,1);
+  }
+  {
+    npy_intp size[1] = {
+      -1 
+    };
+    array4 = obj_to_array_contiguous_allow_conversion(obj1,
+      NPY_INT,
+      &is_new_object4);
+    if (!array4 || !require_dimensions(array4, 1) ||
+      !require_size(array4, size, 1)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = (int) array_size(array4,0);
+  }
+  {
+    npy_intp size[1] = {
+      -1 
+    };
+    array6 = obj_to_array_contiguous_allow_conversion(obj2,
+      NPY_INT,
+      &is_new_object6);
+    if (!array6 || !require_dimensions(array6, 1) ||
+      !require_size(array6, size, 1)) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+    arg7 = (int) array_size(array6,0);
+  }
+  {
+    np_stress_unweighted(arg1,arg2,arg3,arg4,arg5,arg6,arg7);
+    if(PyErr_Occurred()) SWIG_fail;
+  }
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object4 && array4)
+    {
+      Py_DECREF(array4); 
+    }
+  }
+  {
+    if (is_new_object6 && array6)
+    {
+      Py_DECREF(array6); 
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object4 && array4)
+    {
+      Py_DECREF(array4); 
+    }
+  }
+  {
+    if (is_new_object6 && array6)
+    {
+      Py_DECREF(array6); 
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_stress_unweighted(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[6] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 5) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 3) {
+    int _v;
+    {
+      _v = is_array(argv[0]) && PyArray_EquivTypenums(array_type(argv[0]),
+        NPY_DOUBLE);
+    }
+    if (_v) {
+      {
+        _v = is_array(argv[1]) || PySequence_Check(argv[1]);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) || PySequence_Check(argv[2]);
+        }
+        if (_v) {
+          if (argc <= 3) {
+            return _wrap_stress_unweighted__SWIG_1(self, args);
+          }
+          return _wrap_stress_unweighted__SWIG_1(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 5) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_double, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          void *vptr = 0;
+          int res = SWIG_ConvertPtr(argv[3], &vptr, SWIGTYPE_p_int, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            void *vptr = 0;
+            int res = SWIG_ConvertPtr(argv[4], &vptr, SWIGTYPE_p_int, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              return _wrap_stress_unweighted__SWIG_0(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'stress_unweighted'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    stress_unweighted(int,double *,int,int *,int *)\n"
+    "    np_stress_unweighted(double *,int,int,int *,int,int *,int)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_stress_weighted__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 = (double *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  int *arg4 = (int *) 0 ;
+  int arg5 ;
+  int *arg6 = (int *) 0 ;
+  int arg7 ;
+  double *arg8 = (double *) 0 ;
+  int arg9 ;
+  PyArrayObject *array1 = NULL ;
+  PyArrayObject *array4 = NULL ;
+  int is_new_object4 = 0 ;
+  PyArrayObject *array6 = NULL ;
+  int is_new_object6 = 0 ;
+  PyArrayObject *array8 = NULL ;
+  int is_new_object8 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:stress_weighted",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    array1 = obj_to_array_no_conversion(obj0, NPY_DOUBLE);
+    if (!array1 || !require_dimensions(array1,2) || !require_contiguous(array1)
+      || !require_native(array1)) SWIG_fail;
+    arg1 = (double*) array_data(array1);
+    arg2 = (int) array_size(array1,0);
+    arg3 = (int) array_size(array1,1);
+  }
+  {
+    npy_intp size[1] = {
+      -1 
+    };
+    array4 = obj_to_array_contiguous_allow_conversion(obj1,
+      NPY_INT,
+      &is_new_object4);
+    if (!array4 || !require_dimensions(array4, 1) ||
+      !require_size(array4, size, 1)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = (int) array_size(array4,0);
+  }
+  {
+    npy_intp size[1] = {
+      -1 
+    };
+    array6 = obj_to_array_contiguous_allow_conversion(obj2,
+      NPY_INT,
+      &is_new_object6);
+    if (!array6 || !require_dimensions(array6, 1) ||
+      !require_size(array6, size, 1)) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+    arg7 = (int) array_size(array6,0);
+  }
+  {
+    npy_intp size[1] = {
+      -1 
+    };
+    array8 = obj_to_array_contiguous_allow_conversion(obj3,
+      NPY_DOUBLE,
+      &is_new_object8);
+    if (!array8 || !require_dimensions(array8, 1) ||
+      !require_size(array8, size, 1)) SWIG_fail;
+    arg8 = (double*) array_data(array8);
+    arg9 = (int) array_size(array8,0);
+  }
+  {
+    np_stress_weighted(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+    if(PyErr_Occurred()) SWIG_fail;
+  }
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object4 && array4)
+    {
+      Py_DECREF(array4); 
+    }
+  }
+  {
+    if (is_new_object6 && array6)
+    {
+      Py_DECREF(array6); 
+    }
+  }
+  {
+    if (is_new_object8 && array8)
+    {
+      Py_DECREF(array8); 
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object4 && array4)
+    {
+      Py_DECREF(array4); 
+    }
+  }
+  {
+    if (is_new_object6 && array6)
+    {
+      Py_DECREF(array6); 
+    }
+  }
+  {
+    if (is_new_object8 && array8)
+    {
+      Py_DECREF(array8); 
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_stress_weighted(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[7] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 6) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = is_array(argv[0]) && PyArray_EquivTypenums(array_type(argv[0]),
+        NPY_DOUBLE);
+    }
+    if (_v) {
+      {
+        _v = is_array(argv[1]) || PySequence_Check(argv[1]);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) || PySequence_Check(argv[2]);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) || PySequence_Check(argv[3]);
+          }
+          if (_v) {
+            if (argc <= 4) {
+              return _wrap_stress_weighted__SWIG_1(self, args);
+            }
+            return _wrap_stress_weighted__SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 6) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_double, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          void *vptr = 0;
+          int res = SWIG_ConvertPtr(argv[3], &vptr, SWIGTYPE_p_int, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            void *vptr = 0;
+            int res = SWIG_ConvertPtr(argv[4], &vptr, SWIGTYPE_p_int, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              void *vptr = 0;
+              int res = SWIG_ConvertPtr(argv[5], &vptr, SWIGTYPE_p_double, 0);
+              _v = SWIG_CheckState(res);
+              if (_v) {
+                return _wrap_stress_weighted__SWIG_0(self, args);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'stress_weighted'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    stress_weighted(int,double *,int,int *,int *,double *)\n"
+    "    np_stress_weighted(double *,int,int,int *,int,int *,int,double *,int)\n");
+  return 0;
+}
+
+
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
 	 { (char *)"dimension_check", _wrap_dimension_check, METH_VARARGS, NULL},
@@ -6142,6 +6636,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"sparse_layout_MSSP_unweightd", _wrap_sparse_layout_MSSP_unweightd, METH_VARARGS, NULL},
 	 { (char *)"sparse_layout_naive_weighted", _wrap_sparse_layout_naive_weighted, METH_VARARGS, NULL},
 	 { (char *)"sparse_layout_MSSP_weightd", _wrap_sparse_layout_MSSP_weightd, METH_VARARGS, NULL},
+	 { (char *)"stress_unweighted", _wrap_stress_unweighted, METH_VARARGS, NULL},
+	 { (char *)"stress_weighted", _wrap_stress_weighted, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 
