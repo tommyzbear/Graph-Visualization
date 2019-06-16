@@ -97,8 +97,8 @@ void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, doubl
 void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, int t_max, double eps);
 void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
 void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
-void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
-void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
+void sparse_layout_MSSP_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
+void sparse_layout_MSSP_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
 
 // Stress level calculation
 void stress_unweighted(int n, double *X, int m, int *I, int *J);
@@ -1187,7 +1187,10 @@ void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, cha
     try
     {
         std::cerr << "Using Naive Sparse Stress Layout for unweighted graph" << std::endl;
+        std::ofstream file;
+        file.open("dwt_2680_Naive_time.txt", std::fstream::in | std::fstream::out | std::fstream::app);
 
+        std::clock_t programStart = std::clock();
         std::vector<int> pivots;
         std::map<int, std::vector<int>> shortestPaths;
         auto graph = buildGraphUnweighted(n, m, I, J);
@@ -1334,6 +1337,7 @@ void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, cha
             maxMinRandomSP(n, m, k, shortestPaths, pivots, regions, I, J);
             break;
         }
+        file << k << ", " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
         printf("Time taken to sample pivots: %.2fs\n", (double)(std::clock() - tStart) / CLOCKS_PER_SEC);
 
         tStart = std::clock();
@@ -1388,15 +1392,17 @@ void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, cha
             }
         }
         double Naive_time = (double)(std::clock() - tStart) / CLOCKS_PER_SEC;
+        file << Naive_time << ", ";
         printf("Time taken to calculate adapted weights: %.2fs\n", Naive_time);
 
-        std::ofstream file;
+        // std::ofstream file;
         // file.open("Naive_time.txt", std::fstream::in | std::fstream::out | std::fstream::app);
         // file << "Number of Pivots: " << k << ", Adapted weight calculation time: " << Naive_time << "s, ";
         // file << "Number of terms found: " << terms.size() << "\n";
         // file.close();
 
         // Find all avaliable terms in graph
+        tStart = std::clock();
         for (int ij = 0; ij < m; ij++)
         {
             int i = I[ij];
@@ -1409,6 +1415,8 @@ void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, cha
             }
         }
 
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
+        std::cerr << "Time taken to compute edges: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
         std::vector<term> terms_vec;
         for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
         {
@@ -1416,9 +1424,15 @@ void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, cha
         }
 
         std::cerr << "Total number of terms found: " << terms_vec.size() << std::endl;
+        file << terms_vec.size() << ", ";
 
+        tStart = std::clock();
         std::vector<double> etas = schedule(terms_vec, t_max, eps);
         sgd(X, terms_vec, etas);
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << "\n";
+        std::cerr << "SGD computation time: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
+        std::cerr << "Total processing time: " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << std::endl;
+        file.close();
     }
     catch (const char *msg)
     {
@@ -1426,12 +1440,14 @@ void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, cha
     }
 }
 
-void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps)
+void sparse_layout_MSSP_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps)
 {
     try
     {
+        std::ofstream file;
+        file.open("dwt_2680_MSSP_time.txt", std::fstream::in | std::fstream::out | std::fstream::app);
         std::cerr << "Using Multi-Source Sparse Stress Layout for unweighted graph" << std::endl;
-	std::clock_t programStart = std::clock();
+        std::clock_t programStart = std::clock();
         std::vector<int> pivots;
         auto graph = buildGraphUnweighted(n, m, I, J);
         std::clock_t tStart = std::clock();
@@ -1466,7 +1482,9 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
             maxMinRandomSP(n, m, k, pivots, I, J);
             break;
         }
+        file << k << ", " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
         printf("Time taken to sample pivots: %.2fs\n", (double)(std::clock() - tStart) / CLOCKS_PER_SEC);
+
         tStart = std::clock();
 
         std::map<std::tuple<int, int>, term> terms;
@@ -1649,9 +1667,10 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
                 }
             }
         }
-
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
         printf("Time taken to compute adapted weights: %.2fs\n", (double)(std::clock() - tStart) / CLOCKS_PER_SEC);
-	tStart = std::clock();
+        tStart = std::clock();
+
         // Find all avaliable terms in graph
         for (int ij = 0; ij < m; ij++)
         {
@@ -1664,7 +1683,8 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
                 terms[key] = t;
             }
         }
-	std::cerr << "Time taken to compute edges: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
+        std::cerr << "Time taken to compute edges: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
         std::vector<term> terms_vec;
         for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
         {
@@ -1672,12 +1692,15 @@ void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char 
         }
 
         std::cerr << "Total number of terms found: " << terms_vec.size() << std::endl;
-	
-	tStart = std::clock();
+        file << terms_vec.size() << ", ";
+
+        tStart = std::clock();
         std::vector<double> etas = schedule(terms_vec, t_max, eps);
         sgd(X, terms_vec, etas);
-	std::cerr << "SGD computation time: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
-	std::cerr << "Total processing time: " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << std::endl;
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << "\n";
+        std::cerr << "SGD computation time: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
+        std::cerr << "Total processing time: " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << std::endl;
+        file.close();
     }
     catch (const char *msg)
     {
@@ -1690,6 +1713,9 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
     try
     {
         std::cerr << "Using Naive Sparse Stress Layout for weighted graph" << std::endl;
+        std::ofstream file;
+        file.open("commanche_Naive_time.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+        std::clock_t programStart = std::clock();
         std::vector<int> pivots;
         std::map<int, std::vector<double>> shortestPaths;
         auto graph = buildGraphUnweighted(n, m, I, J);
@@ -1838,13 +1864,11 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
             maxMinRandomSP(n, m, k, shortestPaths, pivots, regions, I, J, V);
             break;
         }
+        file << k << ", " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
         printf("Time taken to sample pivots: %.2fs\n", (double)(std::clock() - tStart) / CLOCKS_PER_SEC);
 
         tStart = std::clock();
         std::map<std::tuple<int, int>, term> terms;
-
-        // std::ofstream file;
-        // file.open("terms.txt");
         // Naive adpated weights calculation
         for (int p : pivots)
         {
@@ -1874,10 +1898,7 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
                         }
                         else
                         {
-                            // file << "p < i" << "\n";
                             terms[pi].wji = w_pi;
-                            // file << terms[pi].i << " " << terms[pi].j << " " << terms[pi].d << " " << terms[pi].wij << " " << terms[pi].wji << "\n";
-                            // std::cerr << terms[pi].wij << std::endl;
                         }
                     }
                     // p > i
@@ -1886,10 +1907,8 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
                         std::tuple<int, int> ip = std::make_tuple(i, p);
                         if (terms.find(ip) == terms.end())
                         {
-                            // file << "p > i" << "\n";
                             term t = {i, p, shortestPaths[p][i], w_pi, 0};
                             terms[ip] = t;
-                            // file << terms[ip].i << " " << terms[ip].j << " " << terms[ip].d << " " << terms[ip].wij << " " << terms[ip].wji << "\n";
                         }
                         else
                         {
@@ -1899,9 +1918,10 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
                 }
             }
         }
-        // file.close();
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
         printf("Time taken to compute adapted weights: %.2fs\n", (double)(std::clock() - tStart) / CLOCKS_PER_SEC);
 
+        tStart = std::clock();
         // Find all neighbour terms in graph
         for (int ij = 0; ij < m; ij++)
         {
@@ -1918,16 +1938,23 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
             }
         }
 
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
+
         std::vector<term> terms_vec;
         for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
         {
             terms_vec.push_back(it->second);
         }
-
+        file << terms_vec.size() << ", ";
         std::cerr << "Total number of terms found: " << terms_vec.size() << std::endl;
 
+        tStart = std::clock();
         std::vector<double> etas = schedule(terms_vec, t_max, eps);
         sgd(X, terms_vec, etas);
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << "\n";
+        std::cerr << "SGD computation time: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
+        std::cerr << "Total processing time: " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << std::endl;
+        file.close();
     }
     catch (const char *msg)
     {
@@ -1937,10 +1964,14 @@ void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, doubl
 
 // typedef std::pair<double, int> dist_pivot;
 typedef std::pair<double, std::tuple<int, int>> dist_target;
-void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps)
+void sparse_layout_MSSP_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps)
 {
     try
     {
+        std::cerr << "Using MSSP Sparse Stress Layout for weighted graph" << std::endl;
+        std::ofstream file;
+        file.open("commanche_MSSP_time.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+        std::clock_t programStart = std::clock();
         std::vector<int> pivots;
         auto graph = buildGraphWeighted(n, m, I, J, V);
 
@@ -1976,7 +2007,7 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
             maxMinRandomSP(n, m, k, pivots, I, J, V);
             break;
         }
-
+        file << k << ", " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
         printf("Time taken to sample pivots: %.2fs\n", (double)(std::clock() - tStart) / CLOCKS_PER_SEC);
 
         tStart = std::clock();
@@ -2098,14 +2129,10 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
         }
 
         double MSSP_time = (double)(std::clock() - tStart) / CLOCKS_PER_SEC;
+        file << MSSP_time << ", ";
         printf("Time taken to calculate adapted weights: %.2fs\n", MSSP_time);
 
-        // std::ofstream file;
-        // file.open("MSSP_time.txt", std::fstream::in | std::fstream::out | std::fstream::app);
-        // file << "Number of Pivots: " << k << ", Adapted weight calculation time: " << MSSP_time << "s, ";
-        // file << "Number of terms found: " << terms.size() << "\n";
-        // file.close();
-
+        tStart = std::clock();
         // Find all avaliable terms in graph
         for (int ij = 0; ij < m; ij++)
         {
@@ -2121,18 +2148,22 @@ void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double 
             }
         }
 
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", ";
+
         std::vector<term> terms_vec;
         for (std::map<std::tuple<int, int>, term>::iterator it = terms.begin(); it != terms.end(); it++)
         {
             terms_vec.push_back(it->second);
         }
-
+        file << terms_vec.size() << ", ";
         std::cerr << "Total number of terms found: " << terms_vec.size() << std::endl;
-        // file << "Number of terms found: " << terms_vec.size() << "\n";
-        // file.close();
 
         std::vector<double> etas = schedule(terms_vec, t_max, eps);
         sgd(X, terms_vec, etas);
+        file << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << ", " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << "\n";
+        std::cerr << "SGD computation time: " << (double)(std::clock() - tStart) / CLOCKS_PER_SEC << std::endl;
+        std::cerr << "Total processing time: " << (double)(std::clock() - programStart) / CLOCKS_PER_SEC << std::endl;
+        file.close();
     }
     catch (const char *msg)
     {

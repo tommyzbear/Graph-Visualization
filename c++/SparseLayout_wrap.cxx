@@ -3116,9 +3116,9 @@ namespace swig {
     extern void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, double eps);
     extern void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, int t_max, double eps);
     extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
-    extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
+    extern void sparse_layout_MSSP_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
     extern void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
-    extern void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
+    extern void sparse_layout_MSSP_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
     extern void stress_unweighted(int n, double *X, int m, int *I, int *J);
     extern void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
 
@@ -3456,7 +3456,7 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
         dimension_check(kd);
         unweighted_edge_check(len_I, len_J);
         pivot_check(k, n);
-        sparse_layout_MSSP_unweightd(n, X, len_I, I, J, data, k, t_max, eps);
+        sparse_layout_MSSP_unweighted(n, X, len_I, I, J, data, k, t_max, eps);
     }
     void np_sparse_layout_naive_weighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J, double *V, int len_V, char *data, int size, int k, int t_max, double eps){
         dimension_check(kd);
@@ -3468,7 +3468,7 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
         dimension_check(kd);
         weighted_edge_check(len_I, len_J, len_V);
         pivot_check(k, n);
-        sparse_layout_MSSP_weightd(n, X, len_I, I, J, V, data, k, t_max, eps);
+        sparse_layout_MSSP_weighted(n, X, len_I, I, J, V, data, k, t_max, eps);
     }
     void np_stress_unweighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J){
         stress_unweighted(n, X, len_I, I, J);
@@ -4213,7 +4213,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweighted__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   double *arg2 = (double *) 0 ;
@@ -4253,53 +4253,53 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd__SWIG_0(PyObject *SWIGUN
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:sparse_layout_MSSP_unweightd",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:sparse_layout_MSSP_unweighted",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "1"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "1"" of type '" "int""'");
   } 
   arg1 = static_cast< int >(val1);
   res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_double, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "2"" of type '" "double *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "2"" of type '" "double *""'"); 
   }
   arg2 = reinterpret_cast< double * >(argp2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   res4 = SWIG_ConvertPtr(obj3, &argp4,SWIGTYPE_p_int, 0 |  0 );
   if (!SWIG_IsOK(res4)) {
-    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "4"" of type '" "int *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "4"" of type '" "int *""'"); 
   }
   arg4 = reinterpret_cast< int * >(argp4);
   res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_int, 0 |  0 );
   if (!SWIG_IsOK(res5)) {
-    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "5"" of type '" "int *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "5"" of type '" "int *""'"); 
   }
   arg5 = reinterpret_cast< int * >(argp5);
   res6 = SWIG_AsCharPtrAndSize(obj5, &buf6, NULL, &alloc6);
   if (!SWIG_IsOK(res6)) {
-    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "6"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "6"" of type '" "char *""'");
   }
   arg6 = reinterpret_cast< char * >(buf6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_double(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "9"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "9"" of type '" "double""'");
   } 
   arg9 = static_cast< double >(val9);
-  sparse_layout_MSSP_unweightd(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+  sparse_layout_MSSP_unweighted(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   if (alloc6 == SWIG_NEWOBJ) delete[] buf6;
   return resultobj;
@@ -4414,7 +4414,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weighted__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   double *arg2 = (double *) 0 ;
@@ -4458,58 +4458,58 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd__SWIG_0(PyObject *SWIGUNUS
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:sparse_layout_MSSP_weightd",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:sparse_layout_MSSP_weighted",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "sparse_layout_MSSP_weightd" "', argument " "1"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "sparse_layout_MSSP_weighted" "', argument " "1"" of type '" "int""'");
   } 
   arg1 = static_cast< int >(val1);
   res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_double, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "sparse_layout_MSSP_weightd" "', argument " "2"" of type '" "double *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "sparse_layout_MSSP_weighted" "', argument " "2"" of type '" "double *""'"); 
   }
   arg2 = reinterpret_cast< double * >(argp2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "sparse_layout_MSSP_weightd" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "sparse_layout_MSSP_weighted" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   res4 = SWIG_ConvertPtr(obj3, &argp4,SWIGTYPE_p_int, 0 |  0 );
   if (!SWIG_IsOK(res4)) {
-    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "sparse_layout_MSSP_weightd" "', argument " "4"" of type '" "int *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "sparse_layout_MSSP_weighted" "', argument " "4"" of type '" "int *""'"); 
   }
   arg4 = reinterpret_cast< int * >(argp4);
   res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_int, 0 |  0 );
   if (!SWIG_IsOK(res5)) {
-    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "sparse_layout_MSSP_weightd" "', argument " "5"" of type '" "int *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "sparse_layout_MSSP_weighted" "', argument " "5"" of type '" "int *""'"); 
   }
   arg5 = reinterpret_cast< int * >(argp5);
   res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_double, 0 |  0 );
   if (!SWIG_IsOK(res6)) {
-    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "sparse_layout_MSSP_weightd" "', argument " "6"" of type '" "double *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "sparse_layout_MSSP_weighted" "', argument " "6"" of type '" "double *""'"); 
   }
   arg6 = reinterpret_cast< double * >(argp6);
   res7 = SWIG_AsCharPtrAndSize(obj6, &buf7, NULL, &alloc7);
   if (!SWIG_IsOK(res7)) {
-    SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "sparse_layout_MSSP_weightd" "', argument " "7"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "sparse_layout_MSSP_weighted" "', argument " "7"" of type '" "char *""'");
   }
   arg7 = reinterpret_cast< char * >(buf7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "sparse_layout_MSSP_weightd" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "sparse_layout_MSSP_weighted" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "sparse_layout_MSSP_weightd" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "sparse_layout_MSSP_weighted" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_double(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "sparse_layout_MSSP_weightd" "', argument " "10"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "sparse_layout_MSSP_weighted" "', argument " "10"" of type '" "double""'");
   } 
   arg10 = static_cast< double >(val10);
-  sparse_layout_MSSP_weightd(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10);
+  sparse_layout_MSSP_weighted(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   if (alloc7 == SWIG_NEWOBJ) delete[] buf7;
   return resultobj;
@@ -5448,7 +5448,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweighted__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   double *arg1 = (double *) 0 ;
   int arg2 ;
@@ -5485,7 +5485,7 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd__SWIG_1(PyObject *SWIGUN
   PyObject * obj5 = 0 ;
   PyObject * obj6 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:sparse_layout_MSSP_unweightd",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:sparse_layout_MSSP_unweighted",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
   {
     array1 = obj_to_array_no_conversion(obj0, NPY_DOUBLE);
     if (!array1 || !require_dimensions(array1,2) || !require_contiguous(array1)
@@ -5520,23 +5520,23 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd__SWIG_1(PyObject *SWIGUN
   }
   res8 = SWIG_AsCharPtrAndSize(obj3, &buf8, &size8, &alloc8);
   if (!SWIG_IsOK(res8)) {
-    SWIG_exception_fail(SWIG_ArgError(res8), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "8"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res8), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "8"" of type '" "char *""'");
   }  
   arg8 = reinterpret_cast< char * >(buf8);
   arg9 = static_cast< int >(size8 - 1);
   ecode10 = SWIG_AsVal_int(obj4, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   ecode11 = SWIG_AsVal_int(obj5, &val11);
   if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "11"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "11"" of type '" "int""'");
   } 
   arg11 = static_cast< int >(val11);
   ecode12 = SWIG_AsVal_double(obj6, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "sparse_layout_MSSP_unweightd" "', argument " "12"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "sparse_layout_MSSP_unweighted" "', argument " "12"" of type '" "double""'");
   } 
   arg12 = static_cast< double >(val12);
   {
@@ -5576,7 +5576,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweighted(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
   PyObject *argv[10] = {
     0
@@ -5621,7 +5621,7 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd(PyObject *self, PyObject
                   _v = SWIG_CheckState(res);
                 }
                 if (_v) {
-                  return _wrap_sparse_layout_MSSP_unweightd__SWIG_1(self, args);
+                  return _wrap_sparse_layout_MSSP_unweighted__SWIG_1(self, args);
                 }
               }
             }
@@ -5672,7 +5672,7 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd(PyObject *self, PyObject
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
-                      return _wrap_sparse_layout_MSSP_unweightd__SWIG_0(self, args);
+                      return _wrap_sparse_layout_MSSP_unweighted__SWIG_0(self, args);
                     }
                   }
                 }
@@ -5685,9 +5685,9 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_unweightd(PyObject *self, PyObject
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'sparse_layout_MSSP_unweightd'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'sparse_layout_MSSP_unweighted'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    sparse_layout_MSSP_unweightd(int,double *,int,int *,int *,char *,int,int,double)\n"
+    "    sparse_layout_MSSP_unweighted(int,double *,int,int *,int *,char *,int,int,double)\n"
     "    np_sparse_layout_MSSP_unweighted(double *,int,int,int *,int,int *,int,char *,int,int,int,double)\n");
   return 0;
 }
@@ -5977,7 +5977,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weighted__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   double *arg1 = (double *) 0 ;
   int arg2 ;
@@ -6019,7 +6019,7 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd__SWIG_1(PyObject *SWIGUNUS
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:sparse_layout_MSSP_weightd",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:sparse_layout_MSSP_weighted",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
   {
     array1 = obj_to_array_no_conversion(obj0, NPY_DOUBLE);
     if (!array1 || !require_dimensions(array1,2) || !require_contiguous(array1)
@@ -6066,23 +6066,23 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd__SWIG_1(PyObject *SWIGUNUS
   }
   res10 = SWIG_AsCharPtrAndSize(obj4, &buf10, &size10, &alloc10);
   if (!SWIG_IsOK(res10)) {
-    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "sparse_layout_MSSP_weightd" "', argument " "10"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "sparse_layout_MSSP_weighted" "', argument " "10"" of type '" "char *""'");
   }  
   arg10 = reinterpret_cast< char * >(buf10);
   arg11 = static_cast< int >(size10 - 1);
   ecode12 = SWIG_AsVal_int(obj5, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "sparse_layout_MSSP_weightd" "', argument " "12"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "sparse_layout_MSSP_weighted" "', argument " "12"" of type '" "int""'");
   } 
   arg12 = static_cast< int >(val12);
   ecode13 = SWIG_AsVal_int(obj6, &val13);
   if (!SWIG_IsOK(ecode13)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "sparse_layout_MSSP_weightd" "', argument " "13"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "sparse_layout_MSSP_weighted" "', argument " "13"" of type '" "int""'");
   } 
   arg13 = static_cast< int >(val13);
   ecode14 = SWIG_AsVal_double(obj7, &val14);
   if (!SWIG_IsOK(ecode14)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode14), "in method '" "sparse_layout_MSSP_weightd" "', argument " "14"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode14), "in method '" "sparse_layout_MSSP_weighted" "', argument " "14"" of type '" "double""'");
   } 
   arg14 = static_cast< double >(val14);
   {
@@ -6134,7 +6134,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weighted(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
   PyObject *argv[11] = {
     0
@@ -6183,7 +6183,7 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd(PyObject *self, PyObject *
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
-                    return _wrap_sparse_layout_MSSP_weightd__SWIG_1(self, args);
+                    return _wrap_sparse_layout_MSSP_weighted__SWIG_1(self, args);
                   }
                 }
               }
@@ -6239,7 +6239,7 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd(PyObject *self, PyObject *
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_sparse_layout_MSSP_weightd__SWIG_0(self, args);
+                        return _wrap_sparse_layout_MSSP_weighted__SWIG_0(self, args);
                       }
                     }
                   }
@@ -6253,9 +6253,9 @@ SWIGINTERN PyObject *_wrap_sparse_layout_MSSP_weightd(PyObject *self, PyObject *
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'sparse_layout_MSSP_weightd'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'sparse_layout_MSSP_weighted'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    sparse_layout_MSSP_weightd(int,double *,int,int *,int *,double *,char *,int,int,double)\n"
+    "    sparse_layout_MSSP_weighted(int,double *,int,int *,int *,double *,char *,int,int,double)\n"
     "    np_sparse_layout_MSSP_weighted(double *,int,int,int *,int,int *,int,double *,int,char *,int,int,int,double)\n");
   return 0;
 }
@@ -6633,9 +6633,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"layout_unweighted", _wrap_layout_unweighted, METH_VARARGS, NULL},
 	 { (char *)"layout_weighted", _wrap_layout_weighted, METH_VARARGS, NULL},
 	 { (char *)"sparse_layout_naive_unweighted", _wrap_sparse_layout_naive_unweighted, METH_VARARGS, NULL},
-	 { (char *)"sparse_layout_MSSP_unweightd", _wrap_sparse_layout_MSSP_unweightd, METH_VARARGS, NULL},
+	 { (char *)"sparse_layout_MSSP_unweighted", _wrap_sparse_layout_MSSP_unweighted, METH_VARARGS, NULL},
 	 { (char *)"sparse_layout_naive_weighted", _wrap_sparse_layout_naive_weighted, METH_VARARGS, NULL},
-	 { (char *)"sparse_layout_MSSP_weightd", _wrap_sparse_layout_MSSP_weightd, METH_VARARGS, NULL},
+	 { (char *)"sparse_layout_MSSP_weighted", _wrap_sparse_layout_MSSP_weighted, METH_VARARGS, NULL},
 	 { (char *)"stress_unweighted", _wrap_stress_unweighted, METH_VARARGS, NULL},
 	 { (char *)"stress_weighted", _wrap_stress_weighted, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }

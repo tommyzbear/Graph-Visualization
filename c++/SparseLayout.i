@@ -4,9 +4,9 @@
     extern void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, double eps);
     extern void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, int t_max, double eps);
     extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
-    extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
+    extern void sparse_layout_MSSP_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
     extern void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
-    extern void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
+    extern void sparse_layout_MSSP_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
     extern void stress_unweighted(int n, double *X, int m, int *I, int *J);
     extern void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
 %}
@@ -34,9 +34,9 @@
 extern void layout_unweighted(int n, double *X, int m, int *I, int *J, int t_max, double eps);
 extern void layout_weighted(int n, double *X, int m, int *I, int *J, double *V, int t_max, double eps);
 extern void sparse_layout_naive_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
-extern void sparse_layout_MSSP_unweightd(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
+extern void sparse_layout_MSSP_unweighted(int n, double *X, int m, int *I, int *J, char *sampling_scheme, int k, int t_max, double eps);
 extern void sparse_layout_naive_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
-extern void sparse_layout_MSSP_weightd(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
+extern void sparse_layout_MSSP_weighted(int n, double *X, int m, int *I, int *J, double *V, char *sampling_scheme, int k, int t_max, double eps);
 extern void stress_unweighted(int n, double *X, int m, int *I, int *J);
 extern void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
 
@@ -55,7 +55,7 @@ extern void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
     $action
     if(PyErr_Occurred()) SWIG_fail;
 }
-%rename (sparse_layout_MSSP_unweightd) np_sparse_layout_MSSP_unweighted;
+%rename (sparse_layout_MSSP_unweighted) np_sparse_layout_MSSP_unweighted;
 %exception np_sparse_layout_MSSP_unweighted{
     $action
     if(PyErr_Occurred()) SWIG_fail;
@@ -65,7 +65,7 @@ extern void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
     $action
     if(PyErr_Occurred()) SWIG_fail;
 }
-%rename (sparse_layout_MSSP_weightd) np_sparse_layout_MSSP_weighted;
+%rename (sparse_layout_MSSP_weighted) np_sparse_layout_MSSP_weighted;
 %exception np_sparse_layout_MSSP_weighted{
     $action
     if(PyErr_Occurred()) SWIG_fail;
@@ -124,7 +124,7 @@ extern void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
         dimension_check(kd);
         unweighted_edge_check(len_I, len_J);
         pivot_check(k, n);
-        sparse_layout_MSSP_unweightd(n, X, len_I, I, J, data, k, t_max, eps);
+        sparse_layout_MSSP_unweighted(n, X, len_I, I, J, data, k, t_max, eps);
     }
     void np_sparse_layout_naive_weighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J, double *V, int len_V, char *data, int size, int k, int t_max, double eps){
         dimension_check(kd);
@@ -136,7 +136,7 @@ extern void stress_weighted(int n, double *X, int m, int *I, int *J, double *V);
         dimension_check(kd);
         weighted_edge_check(len_I, len_J, len_V);
         pivot_check(k, n);
-        sparse_layout_MSSP_weightd(n, X, len_I, I, J, V, data, k, t_max, eps);
+        sparse_layout_MSSP_weighted(n, X, len_I, I, J, V, data, k, t_max, eps);
     }
     void np_stress_unweighted(double *X, int n, int kd, int *I, int len_I, int *J, int len_J){
         stress_unweighted(n, X, len_I, I, J);
