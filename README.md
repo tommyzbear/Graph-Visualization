@@ -7,9 +7,13 @@
 
 ## Compiling
 First we need to use the SWIG interface to generate the wrapper for our C++ implementations using the below command
+
 `swig -c++ -python SparseLayout.i`
+
 Then we will execute the `setup.py` to build our Python package incoporating with GCC compiler.
+
 `python3 setup.py build`
+
 After the code being compiled successfully, a `build` folder will be generated and move the package file under the `lib*` subdirectory to your base directory where your Python script locates.
 
 ## Import
@@ -28,9 +32,14 @@ The input for the graph drawing methods are
 ## List of functions
 `
 cpp.sparse_layout_naive_unweighted(X, I, J, sampling_scheme, k, sgd_iter, eps)
+
 cpp.sparse_layout_MSSP_unweighted(X, I, J, sampling_scheme, k, sgd_iter, eps)
+
 cpp.layout_unweighted(X, I, J, sgd_iter, eps)
+
 cpp.layout_weighted(X, I, J, V, sgd_iter, eps)
+
 cpp.sparse_layout_naive_weighted(X, I, J, V, sampling_scheme, k, sgd_iter, eps)
+
 cpp.sparse_layout_MSSP_weighted(X, I, J, V, sampling_scheme, k, sgd_iter, eps)
 `
